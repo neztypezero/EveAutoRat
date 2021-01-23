@@ -85,7 +85,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\ActionState.cs" />
+    <Compile Include="Classes\ActionState\ActionState.cs" />
+    <Compile Include="Classes\ActionState\ActionStateBattle.cs" />
+    <Compile Include="Classes\ActionState\ActionStateClickPoint.cs" />
+    <Compile Include="Classes\ActionState\ActionStateClickWord.cs" />
+    <Compile Include="Classes\ActionState\ActionStateClickWordAt.cs" />
+    <Compile Include="Classes\ActionState\ActionStateConfirmUntilEncounter.cs" />
+    <Compile Include="Classes\ActionState\ActionStateNOP.cs" />
     <Compile Include="Classes\ActionThread.cs" />
     <Compile Include="Classes\ActionThreadLearn.cs" />
     <Compile Include="Classes\ActionThreadNewsRAT.cs" />

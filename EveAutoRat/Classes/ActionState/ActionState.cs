@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace EveAutoRat.Classes
+namespace EveAutoRat.Classes.ActionState
 {
   public class ActionState
   {
