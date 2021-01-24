@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace EveAutoRat.Classes.ActionState
+namespace EveAutoRat.Classes
 {
   public class ActionState
   {
@@ -77,7 +77,6 @@ namespace EveAutoRat.Classes.ActionState
 
     public Rectangle FindWord(string word, Rectangle searchBounds)
     {
-      int i = 0;
       foreach (int threshhold in parent.threshHoldList)
       {
         Bitmap bmpTh = threshHoldDictionary[threshhold];
@@ -211,17 +210,6 @@ namespace EveAutoRat.Classes.ActionState
     public virtual void DrawDebug(Graphics g)
     {
       return;
-    }
-  }
-  public class ActionStateInfiniteLoop : ActionState
-  {
-    public ActionStateInfiniteLoop(ActionThread parent) : base(parent, 100)
-    {
-    }
-
-    public override ActionState Run(double totalTime)
-    {
-      return this;
     }
   }
 }

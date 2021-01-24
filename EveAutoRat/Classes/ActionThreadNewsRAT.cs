@@ -1,6 +1,4 @@
 ﻿using AForge.Imaging;
-using AForge.Imaging.Filters;
-using EveAutoRat.Classes.ActionState;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,7 +11,7 @@ namespace EveAutoRat.Classes
     private BlobCounter objectCounter = new BlobCounter();
     private Bitmap drawBuffer = null;
 
-    private ActionState.ActionState currentState;
+    private ActionState currentState;
 
     public Rectangle battleWeaponBounds = new Rectangle(1190, 850, 720, 260);
     public Dictionary<string, WeaponState> weaponDictionary = new Dictionary<string, WeaponState>();
@@ -36,7 +34,7 @@ namespace EveAutoRat.Classes
         //.SetNextState(new ActionStateClickWord(this, 128, "Begin", 200, true))
         //.SetNextState(new ActionStateConfirmUntilEncounter(this, 128, new ActionStateBattle(this, 100)))
         .SetNextState(new ActionStateBattle(this, 100))
-        .SetNextState(new ActionStateInfiniteLoop(this))
+        .SetNextState(new ActionStateInfiniteLoop(this, 100))
       ;
 
       List<PixelObject> poList = PixelObjectList.GetPixelObjectList(0);

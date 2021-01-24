@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace EveAutoRat.Classes.ActionState
+namespace EveAutoRat.Classes
 {
   class ActionStateClickWordAt : ActionState
   {

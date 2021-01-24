@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace EveAutoRat.Classes.ActionState
+namespace EveAutoRat.Classes
 {
   class ActionStateClickWord : ActionState
   {
