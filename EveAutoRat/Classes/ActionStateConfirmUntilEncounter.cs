@@ -10,6 +10,7 @@ namespace EveAutoRat.Classes
     private string wordSearch = null;
     private Rectangle ZeroBounds = new Rectangle(0, 0, 0, 0);
     private Rectangle wordSearchBounds;
+    private double zoomOutUntil = 0;
 
     public ActionStateConfirmUntilEncounter(ActionThreadNewsRAT parent, double delay, ActionStateBattle battleState) : base(parent, delay)
     {
@@ -21,6 +22,13 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
+      if (totalTime < zoomOutUntil)
+      {
+        Win32.SendMouseWheel(eventHWnd, threshHoldDictionary[0].Width / 2, threshHoldDictionary[0].Height / 2, 120, Win32.WParams.MK_CONTROL);
+        nextDelay = 100;
+        return this;
+      }
+
       Rectangle[] enemyBoundsList = battleState.GetEnemyBounds();
       Bitmap bmp = parent.threshHoldDictionary[128];
 
@@ -34,6 +42,8 @@ namespace EveAutoRat.Classes
           nextDelay = 1500;
           wordSearch = null;
           wordSearchBounds = ZeroBounds;
+
+          zoomOutUntil = totalTime + 2500;
           return this;
         }
       }
@@ -51,7 +61,7 @@ namespace EveAutoRat.Classes
       {
         if (weapon.name != null && weapon.name.StartsWith("pulse-laser"))
         {
-          if (weapon.IsActive(parent.threshHoldDictionary[0]) == WeaponStateFlag.InActive)
+          if (weapon.CurrentState == WeaponStateFlag.InActive)
           {
             using (Bitmap eyeBmp = bmp.Clone(eyeBounds, PixelFormat.Format24bppRgb))
             {

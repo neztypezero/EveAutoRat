@@ -23,13 +23,14 @@ namespace EveAutoRat.Classes
     protected Rectangle filterTitleBounds = new Rectangle(1625, 75, 150, 35);
     protected Rectangle battleLockOnBounds = new Rectangle(1170, 707, 60, 60);
     protected Rectangle battleIconBounds = new Rectangle(1545, 135, 39, 561);
-    protected Rectangle firstBattleIconBounds = new Rectangle(1545, 135, 39, 75);
+    protected Rectangle firstBattleIconBounds = new Rectangle(1545, 135, 42, 75);
     protected Rectangle lootAllBounds = new Rectangle(700, 950, 380, 70);
     protected Rectangle firstItemDistanceBounds = new Rectangle(1586, 164, 85, 26);
     protected Rectangle popupBounds = new Rectangle(1300, 150, 200, 950);
     protected Rectangle throttleBounds = new Rectangle(684, 986, 37, 31);
     protected Rectangle targetAllBounds = new Rectangle(1167, 707, 69, 62);
     protected Rectangle filterListBounds = new Rectangle(1650, 200, 250, 725);
+    protected Rectangle battleOverDialogArrowBounds = new Rectangle(825, 460, 30, 120);
 
     protected AForge.Imaging.Filters.Invert invertFilter = new AForge.Imaging.Filters.Invert();
 
@@ -95,7 +96,7 @@ namespace EveAutoRat.Classes
               using (Bitmap ocrBmp = bmp.Clone(ocrBounds, PixelFormat.Format24bppRgb))
               {
                 invertFilter.ApplyInPlace(ocrBmp);
-                string foundWord = OCR.GetText(ocrBmp, new Rectangle(0,0, ocrBmp.Width, ocrBmp.Height)).Trim();
+                string foundWord = OCR.GetText(ocrBmp, new Rectangle(0, 0, ocrBmp.Width, ocrBmp.Height)).Trim();
                 if (foundWord == word)
                 {
                   return new Rectangle(r.X + searchBounds.X, r.Y + searchBounds.Y, r.Width, r.Height);
@@ -121,7 +122,7 @@ namespace EveAutoRat.Classes
         Bitmap gbmp = grayFilter.Apply(bmp);
         thFilter.ApplyInPlace(gbmp);
         invertFilter.ApplyInPlace(gbmp);
-        string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim().Replace('g', '9');
+        string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim();
         Double.TryParse(foundWord, out lastResult);
       }
       if (Double.IsNaN(lastResult))
@@ -135,7 +136,7 @@ namespace EveAutoRat.Classes
           gbmp = grayFilter.Apply(gbmp);
           thFilter.ApplyInPlace(gbmp);
           invertFilter.ApplyInPlace(gbmp);
-          string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim().Replace('g', '9');
+          string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim();
           Double.TryParse(foundWord, out lastResult);
         }
       }
@@ -144,8 +145,6 @@ namespace EveAutoRat.Classes
 
     public Rectangle FindDouble(ref double value, Rectangle searchBounds)
     {
-      double lastResult = Double.NaN;
-      Rectangle resultRectangle = NullRect;
       foreach (Bitmap thbmp in threshHoldDictionary.Values)
       {
         using (Bitmap bmp = thbmp.Clone(searchBounds, PixelFormat.Format24bppRgb))
@@ -161,23 +160,28 @@ namespace EveAutoRat.Classes
             {
               invertFilter.ApplyInPlace(ocrBmp);
               string foundWord = OCR.GetNumber(ocrBmp, new Rectangle(0, 0, ocrBmp.Width, ocrBmp.Height)).Trim();
-              ocrBmp.Save("ObjBitmap\\" +  "_" + foundWord + "_" + ocrBounds + ".bmp");
-              Console.WriteLine(foundWord);
+              //ocrBmp.Save("ObjBitmap\\" +  "_" + foundWord + "_" + ocrBounds + ".bmp");
+              //Console.WriteLine(foundWord);
               double result;
               if (Double.TryParse(foundWord, out result))
               {
-                if (Double.IsNaN(lastResult) || result > lastResult)
-                {
-                  lastResult = result;
-                  resultRectangle = new Rectangle(r.X + searchBounds.X, r.Y + searchBounds.Y, r.Width, r.Height);
-                }
+                value = result;
+                return new Rectangle(r.X + searchBounds.X, r.Y + searchBounds.Y, r.Width, r.Height);
               }
             }
           }
         }
       }
-      value = lastResult;
-      return resultRectangle;
+      value = Double.NaN;
+      return NullRect;
+    }
+
+    public Rectangle FindIcon(Rectangle searchBounds, string iconName, int threshHold)
+    {
+      using (Bitmap bmp = parent.threshHoldDictionary[threshHold].Clone(searchBounds, PixelFormat.Format24bppRgb))
+      {
+        return PixelObjectList.FindBitmap(bmp, iconName, threshHold);
+      }
     }
 
     public virtual ActionState Run(double totalTime)

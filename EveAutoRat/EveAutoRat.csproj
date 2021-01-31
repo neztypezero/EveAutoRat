@@ -96,6 +96,7 @@
     <Compile Include="Classes\ActionThread.cs" />
     <Compile Include="Classes\ActionThreadLearn.cs" />
     <Compile Include="Classes\ActionThreadNewsRAT.cs" />
+    <Compile Include="Classes\ActionThreadParameterList.cs" />
     <Compile Include="Classes\OCR.cs" />
     <Compile Include="Classes\WeaponState.cs" />
     <Compile Include="Classes\EveAutoRatPlayer.cs" />
@@ -180,6 +181,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\112\icon_dialog_continuation_arrow.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\128\icon_dialog_arrow_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\128\icon_eye_001.bmp">

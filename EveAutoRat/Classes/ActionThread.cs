@@ -18,9 +18,7 @@ namespace EveAutoRat.Classes
     public int[] threshHoldList = new int[] { 64, 80, 96, 112, 128 };
     public Dictionary<int, Bitmap> threshHoldDictionary = new Dictionary<int, Bitmap>();
     public Dictionary<Rectangle, List<Rectangle>> lineBoundsDictionary;
-    protected Bitmap eveBitmap = null;
     protected Bitmap currentFrame = null;
-    protected Boolean needUpdate = true;
     public bool running = false;
 
     protected Point zp = new Point(0, 0);
@@ -47,57 +45,86 @@ namespace EveAutoRat.Classes
 
     public void Start()
     {
-      Thread actionThread = new Thread(RunLoop);
+      Thread actionThread = new Thread(RunEveryLoop);
       actionThread.Start();
     }
 
-    private void RunLoop()
+    private void RunEveryLoop()
     {
-      if (!running)
-      {
+      if (!running) {
         running = true;
+
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.Start();
         double lastTime = 0.0;
         double waitTime = 100.0;
+
+        Thread loopOnceThread = null;
+        ActionThreadParameterList paramList = new ActionThreadParameterList();
+
         while (running)
         {
           TimeSpan ts = stopWatch.Elapsed;
-          if (threshHoldDictionary.Count > 0)
+          double currentTime = ts.TotalMilliseconds;
+          if ((currentTime - lastTime) >= waitTime)
           {
-            StepEvery(ts.TotalMilliseconds);
-          }
-          if ((ts.TotalMilliseconds - lastTime) >= waitTime)
-          {
-            //Console.WriteLine("RunTime " + (ts.TotalMilliseconds - lastTime));
-            lastTime = ts.TotalMilliseconds;
-
-            if (needUpdate)
+            lastTime = currentTime;
+            using (Bitmap screenBmp = Win32.GetScreenBitmap(emuHWnd))
             {
-              eveBitmap = Win32.GetScreenBitmap(emuHWnd);
-              Win32.CopyScreenBitmap(emuHWnd, eveBitmap);
-              currentFrame = grayScaleFilter.Apply(eveBitmap);
-              threshHoldDictionary[0] = eveBitmap;
-              threshHoldDictionary[1] = currentFrame;
-              for (int i = 0; i < threshHoldList.Length; i++)
+              Win32.CopyScreenBitmap(emuHWnd, screenBmp);
+              //StepEvery(lastTime);
+              //Console.WriteLine(lastTime);
+
+              StepEvery(screenBmp, currentTime);
+
+              if (loopOnceThread == null || !loopOnceThread.IsAlive)
               {
-                Threshold thFilter = new Threshold(threshHoldList[i]);
-                Bitmap b = thFilter.Apply(currentFrame);
-                threshHoldDictionary[threshHoldList[i]] = b.Clone(new Rectangle(0, 0, b.Width, b.Height), PixelFormat.Format32bppArgb);
+                if ((currentTime - paramList.time) >= paramList.nextCallDelay)
+                {
+                  paramList.time = currentTime;
+                  paramList.screenBitmap = screenBmp.Clone(new Rectangle(0, 0, screenBmp.Width, screenBmp.Height), PixelFormat.Format24bppRgb);
+                  paramList.nextCallDelay = 0;
+                  loopOnceThread = StartRunOnceThread(paramList);
+                }
               }
+              Draw(screenBmp);
+              parentForm.Invoke(new Action(() =>
+              {
+                parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
+              }));
             }
-            waitTime = Step(ts.TotalMilliseconds);
           }
         }
-        foreach (KeyValuePair<int, Bitmap> item in threshHoldDictionary)
+        foreach(int index in threshHoldList)
         {
-          item.Value.Save("ObjBitmap\\o" + item.Key + ".bmp");
+          threshHoldDictionary[index].Save("ObjBitmap\\"+index+".bmp");
         }
-        parentForm.Invoke(new Action(() =>
-        {
-          parentForm.BackgroundImage = null;
-        }));
       }
+    }
+
+    protected virtual Thread StartRunOnceThread(ActionThreadParameterList paramList)
+    {
+      Thread loopOnceThread = new Thread(RunOnce);
+      loopOnceThread.Start(paramList);
+      return loopOnceThread;
+    }
+
+    protected virtual void RunOnce(object p)
+    {
+      ActionThreadParameterList paramList = (ActionThreadParameterList)p;
+      Bitmap screenBitmap = paramList.screenBitmap;
+      Rectangle r = new Rectangle(0, 0, screenBitmap.Width, screenBitmap.Height);
+
+      currentFrame = grayScaleFilter.Apply(screenBitmap);
+      threshHoldDictionary[0] = screenBitmap;
+      threshHoldDictionary[1] = currentFrame;
+      for (int i = 0; i < threshHoldList.Length; i++)
+      {
+        Threshold thFilter = new Threshold(threshHoldList[i]);
+        Bitmap b = thFilter.Apply(currentFrame);
+        threshHoldDictionary[threshHoldList[i]] = b.Clone(r, PixelFormat.Format24bppRgb);
+      }
+      paramList.nextCallDelay = Step(paramList.time);
     }
 
     public Dictionary<Rectangle, List<Rectangle>> GetBoundsDictionaryList(Rectangle[] rectArray)
@@ -167,7 +194,7 @@ namespace EveAutoRat.Classes
       return 0.0;
     }
 
-    protected virtual void StepEvery(double totalTime)
+    protected virtual void StepEvery(Bitmap screenBmp, double totalTime)
     {
     }
 
@@ -177,14 +204,8 @@ namespace EveAutoRat.Classes
       Console.WriteLine("stop");
     }
 
-    public void Draw(Graphics g)
+    public virtual void Draw(Bitmap b)
     {
-      Bitmap b = currentFrame;
-      if (b != null)
-      {
-        Console.WriteLine("Draw");
-        g.DrawImage(b, zp);
-      }
     }
 
     public virtual void MouseDown(MouseEventArgs e)

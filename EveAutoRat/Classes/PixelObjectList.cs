@@ -12,6 +12,7 @@ namespace EveAutoRat.Classes
   {
     private static String path = "PixelObjects\\";
     private static Dictionary<int, List<PixelObject>> objectList = null;
+    private static Dictionary<int, Dictionary<string, PixelObject>> objectDictionary = null;
     public static String CheckBitmap(Bitmap bmp, int threshHold)
     {
       List<PixelObject> poList = GetPixelObjectList(threshHold);
@@ -34,11 +35,13 @@ namespace EveAutoRat.Classes
       {
         if (po.text.StartsWith(iconName))
         {
-          TemplateMatch[] matchings = tm.ProcessImage(bmp, po.bmp);
-
-          if (matchings.Length > 0)
+          if (bmp.Width > po.bmp.Width && bmp.Height > po.bmp.Height)
           {
-            return matchings[0].Rectangle;
+            TemplateMatch[] matchings = tm.ProcessImage(bmp, po.bmp);
+            if (matchings.Length > 0)
+            {
+              return matchings[0].Rectangle;
+            }
           }
         }
       }
@@ -54,9 +57,19 @@ namespace EveAutoRat.Classes
       return objectList[threshHold];
     }
 
+    public static Dictionary<string, PixelObject> GetPixelObjectDictionary(int threshHold)
+    {
+      if (objectDictionary == null)
+      {
+        LoadObjectList();
+      }
+      return objectDictionary[threshHold];
+    }
+
     private static void LoadObjectList()
     {
       objectList = new Dictionary<int, List<PixelObject>>();
+      objectDictionary = new Dictionary<int, Dictionary<string, PixelObject>>();
       if (Directory.Exists(path))
       {
         String[] threshHoldFolders = Directory.GetDirectories(path);
@@ -65,7 +78,9 @@ namespace EveAutoRat.Classes
           String[] threshHoldString = folder.Split('\\');
           int threshHold = Int32.Parse(threshHoldString[threshHoldString.Length - 1]);
           List<PixelObject> poList = new List<PixelObject>();
+          Dictionary<string, PixelObject> poDictionary = new Dictionary<string, PixelObject>();
           objectList[threshHold] = poList;
+          objectDictionary[threshHold] = poDictionary;
           String[] imageList = Directory.GetFiles(folder);
           foreach (String imagePath in imageList)
           {
@@ -79,6 +94,7 @@ namespace EveAutoRat.Classes
               String text = imageFile.Substring(fu + 1, lu - fu - 1);
               PixelObject po = new PixelObject(bmp.Clone(new Rectangle(0, 0, bmp.Width, bmp.Height), PixelFormat.Format24bppRgb), text);
               poList.Add(po);
+              poDictionary[text] = po;
             } 
             else if (imageFile.StartsWith("weapon"))
             {
@@ -87,6 +103,7 @@ namespace EveAutoRat.Classes
               String text = imageFile.Substring(fu + 1, lu - fu - 1);
               PixelObject po = new PixelObject(bmp.Clone(new Rectangle(0, 0, bmp.Width, bmp.Height), PixelFormat.Format24bppRgb), text);
               poList.Add(po);
+              poDictionary[text] = po;
             }
           }
         }

@@ -17,6 +17,8 @@ namespace EveAutoRat.Classes
     private double lootingTime = 0;
     private double approachingTime = 0;
     private double targetAllTime = 0;
+    private bool battleOver = false;
+    private double battleOverWaitTime = 0;
 
     private int looting = 0;
 
@@ -62,6 +64,24 @@ namespace EveAutoRat.Classes
       return NullRect;
     }
 
+    public bool IsFirstTargetActivated()
+    {
+      using (Bitmap iconColumnLoot = threshHoldDictionary[64].Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
+      {
+        objectCounter.ProcessImage(iconColumnLoot);
+      }
+      Rectangle[] lootRectList = objectCounter.GetObjectsRectangles();
+      int count = 0;
+      foreach (Rectangle r in lootRectList)
+      {
+        if (r.Width > 3 && r.Width < 10 && r.Height > 3 && r.Height < 16)
+        {
+          count++;
+        }
+      }
+      return count == 2;
+    }
+
     public Point FindFirstEnemy(Rectangle[] battleIconRectList)
     {
       if (battleIconRectList.Length > 0)
@@ -91,8 +111,143 @@ namespace EveAutoRat.Classes
       }
       return NullRect;
     }
-
+    //
     public override ActionState Run(double totalTime)
+    {
+      Bitmap screenBmp = threshHoldDictionary[0];
+      Bitmap bmp64 = threshHoldDictionary[64];
+      Bitmap bmp128 = threshHoldDictionary[128];
+
+      if (totalTime > targetAllTime)
+      {
+        Rectangle targetAll = FindTargetAll(bmp128);
+        if (targetAll.X > -1)
+        {
+          targetAllTime = totalTime + 5000;
+          lastClick = parent.GetClickPoint(targetAll);
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          return this;
+        }
+      }
+      if (wordSearch != null)
+      {
+        Rectangle found = FindWord(wordSearch, searchBounds);
+        if (found.X != -1)
+        {
+          lastClick = parent.GetClickPoint(found);
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          wordSearch = null;
+          searchBounds = NullRect;
+          nextDelay = 2000;
+          if (looting == 2)
+          {
+            looting = 0;
+          }
+          return this;
+        }
+      }
+      Rectangle[] battleIconRectList = GetEnemyBounds();
+
+      //if (looting != 0)
+      //{
+      //  if (looting == 1 && wordSearch == null)
+      //  {
+      //    looting = 2;
+      //    wordSearch = "Loot";
+      //    searchBounds = lootAllBounds;
+      //    lootingTime = totalTime + 5000;
+      //  }
+      //  return this;
+      //}
+
+      //double distance = -1;
+      //Rectangle dr = FindDouble(ref distance, firstItemDistanceBounds);
+      //if (distance < 9 || battleOver)
+      //{
+      //  Rectangle lootBounds = GetFirstLootBounds();
+      //  if (lootBounds.X > -1)
+      //  {
+      //    Point center = parent.GetClickPoint(lootBounds);
+      //    Win32.SendMouseClick(eventHWnd, center.X, center.Y);
+      //    lastClick = center;
+
+      //    nextDelay = 1500;
+      //    wordSearch = "Loot";
+      //    searchBounds = popupBounds;
+      //    looting = 1;
+
+      //    return this;
+      //  }
+      //}
+
+      Point enemyPoint = FindFirstEnemy(battleIconRectList);
+      if (enemyPoint.X > -1)
+      {
+        battleOverWaitTime = 0;
+        battleOver = false;
+      } 
+      else
+      {
+        Rectangle battleOverRect = FindIcon(battleOverDialogArrowBounds, "dialog_arrow", 128);
+        if (battleOverRect.X > -1)
+        {
+          battleOver = true;
+          lastClick = parent.GetClickPoint(battleOverRect);
+          lastClick.X += battleOverDialogArrowBounds.X;
+          lastClick.Y += battleOverDialogArrowBounds.Y;
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          nextDelay = 400;
+          return this;
+        }
+        if (battleOver)
+        {
+          if (battleOverWaitTime == 0)
+          {
+            battleOverWaitTime = totalTime + 5000;
+          }
+          else if (totalTime > battleOverWaitTime)
+          {
+            return nextState;
+          }
+        }
+      }
+
+      WeaponState pulseLaser = null;
+      if (ratParent.allWeaponsLoaded)
+      {
+        foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
+        {
+          if (weapon.name.StartsWith("pulse-laser"))
+          {
+            pulseLaser = weapon;
+            break;
+          }
+        }
+      }
+      if (pulseLaser != null)
+      {
+        if (pulseLaser.CurrentState == WeaponStateFlag.Active)
+        {
+          foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
+          {
+            if (weapon.CurrentState == WeaponStateFlag.InActive)
+            {
+              if (weapon != pulseLaser && totalTime > weapon.clickTime)
+              {
+                lastClick = parent.GetClickPoint(weapon.bounds);
+                Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+                weapon.clickTime = totalTime + 2500;
+                return this;
+              }
+            }
+          }
+        }
+      }
+
+      return this;
+    }
+
+    public ActionState OldRun(double totalTime)
     {
       Bitmap screenBmp = threshHoldDictionary[0];
       Bitmap bmp64 = threshHoldDictionary[64];
@@ -179,7 +334,7 @@ namespace EveAutoRat.Classes
 
         if (pulseLaser != null)
         {
-          if (pulseLaser.IsActive(screenBmp) == WeaponStateFlag.InActive)
+          if (pulseLaser.CurrentState == WeaponStateFlag.InActive)
           {
             if (enemyPoint.X > -1)
             {
@@ -193,13 +348,13 @@ namespace EveAutoRat.Classes
               return this;
             }
           }
-          else if (enemyPoint.X > -1 && pulseLaser.IsActive(screenBmp) == WeaponStateFlag.Active)
+          else if (enemyPoint.X > -1 && pulseLaser.CurrentState == WeaponStateFlag.Active)
           {
             foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
             {
               if (weapon.name.StartsWith("heat-sink") || weapon.name.StartsWith("nosferatu"))
               {
-                if (weapon.IsActive(screenBmp) == WeaponStateFlag.InActive)
+                if (weapon.CurrentState == WeaponStateFlag.InActive)
                 {
                   Point center = parent.GetClickPoint(weapon.bounds);
                   Win32.SendMouseClick(eventHWnd, center.X, center.Y);
@@ -241,7 +396,7 @@ namespace EveAutoRat.Classes
         {
           if (weapon.name != null && (weapon.name.StartsWith("armor-repairer") || weapon.name.StartsWith("adaptive-armor-hardener")))
           {
-            if (weapon.IsActive(screenBmp) == WeaponStateFlag.InActive)
+            if (weapon.CurrentState == WeaponStateFlag.InActive)
             {
               Point center = parent.GetClickPoint(weapon.bounds);
               Win32.SendMouseClick(eventHWnd, center.X, center.Y);

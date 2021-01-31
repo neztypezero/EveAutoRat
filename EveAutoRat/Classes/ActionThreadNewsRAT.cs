@@ -9,12 +9,12 @@ namespace EveAutoRat.Classes
   class ActionThreadNewsRAT : ActionThread
   {
     private BlobCounter objectCounter = new BlobCounter();
-    private Bitmap drawBuffer = null;
 
     private ActionState currentState;
 
     public Rectangle battleWeaponBounds = new Rectangle(1190, 850, 720, 260);
     public Dictionary<string, WeaponState> weaponDictionary = new Dictionary<string, WeaponState>();
+    public bool allWeaponsLoaded = false;
 
     Font drawFont;
 
@@ -32,9 +32,9 @@ namespace EveAutoRat.Classes
         //.SetNextState(new ActionStateClickWord(this, 64, "News", 2000))
         //.SetNextState(new ActionStateClickWord(this, 64, "Communication", 2000))
         //.SetNextState(new ActionStateClickWord(this, 128, "Begin", 200, true))
-        //.SetNextState(new ActionStateConfirmUntilEncounter(this, 128, new ActionStateBattle(this, 100)))
-        .SetNextState(new ActionStateBattle(this, 100))
-        .SetNextState(new ActionStateInfiniteLoop(this, 100))
+        .SetNextState(new ActionStateConfirmUntilEncounter(this, 128, new ActionStateBattle(this, 100)))
+        //.SetNextState(new ActionStateBattle(this, 100))
+        .SetNextState(currentState)
       ;
 
       List<PixelObject> poList = PixelObjectList.GetPixelObjectList(0);
@@ -45,11 +45,12 @@ namespace EveAutoRat.Classes
       }
     }
 
-    public void LoadWeapons()
+    public void LoadWeapons(Bitmap screenBmp)
     {
       List<PixelObject> poList = PixelObjectList.GetPixelObjectList(0);
-      using (Bitmap weaponAreaBitmap = threshHoldDictionary[0].Clone(battleWeaponBounds, PixelFormat.Format24bppRgb))
+      using (Bitmap weaponAreaBitmap = screenBmp.Clone(battleWeaponBounds, PixelFormat.Format24bppRgb))
       {
+        int loadedCount = 0;
         foreach (PixelObject po in poList)
         {
           if (weaponDictionary[po.text].IsNull)
@@ -61,6 +62,7 @@ namespace EveAutoRat.Classes
             {
               Rectangle r = matchings[0].Rectangle;
               weaponDictionary[po.text] = new WeaponState(po.bmp, new Rectangle(r.X + battleWeaponBounds.X, r.Y + battleWeaponBounds.Y, r.Width, r.Height), po.text);
+              loadedCount++;
             }
             else
             {
@@ -68,12 +70,26 @@ namespace EveAutoRat.Classes
             }
           }
         }
+        if (loadedCount == weaponDictionary.Count)
+        {
+          allWeaponsLoaded = true;
+        }
       }
     }
 
-    protected override void StepEvery(double totalTime)
+    protected override void StepEvery(Bitmap screenBmp, double totalTime)
     {
-      LoadWeapons();
+      if (allWeaponsLoaded)
+      {
+        foreach (WeaponState weapon in weaponDictionary.Values)
+        {
+          weapon.SetWeaponState(screenBmp, totalTime);
+        }
+      }
+      else
+      {
+        LoadWeapons(screenBmp);
+      }
     }
 
     protected override double Step(double totalTime)
@@ -85,34 +101,47 @@ namespace EveAutoRat.Classes
         currentThreshHold = currentState.GetThreshHold();
       }
       currentThreshHoldBmp = threshHoldDictionary[currentThreshHold];
-      if (drawBuffer == null)
-      {
-        drawBuffer = new Bitmap(currentThreshHoldBmp.Width, currentThreshHoldBmp.Height);
-      }
       objectCounter.ProcessImage(currentThreshHoldBmp);
       Rectangle[] rects = objectCounter.GetObjectsRectangles();
       lineBoundsDictionary = GetBoundsDictionaryList(rects);
 
-      using (Graphics g = Graphics.FromImage(drawBuffer))
+      if (currentState != null)
       {
-        g.DrawImage(threshHoldDictionary[128], zp);
-        //g.FillRectangle(Brushes.Black, new Rectangle(0, 0, b64.Width, b64.Height));
-        foreach (KeyValuePair<Rectangle, List<Rectangle>> item in lineBoundsDictionary)
+        currentState = currentState.Run(totalTime);
+        if (currentState != null)
         {
-          int count = 0;
-          Pen p = Pens.Red;// linePen[item.Key];
-          foreach (Rectangle r in item.Value)
+          return currentState.GetDelay();
+        }
+      }
+      return 100.0;
+    }
+
+    public override void Draw(Bitmap b)
+    {
+      using (Graphics g = Graphics.FromImage(b))
+      {
+        if (lineBoundsDictionary != null)
+        {
+          lock(lineBoundsDictionary)
           {
-            count++;
-            g.DrawRectangle(p, r);
-            g.DrawString(count.ToString(), drawFont, Brushes.Green, r.Location);
+            foreach (KeyValuePair<Rectangle, List<Rectangle>> item in lineBoundsDictionary)
+            {
+              int count = 0;
+              Pen p = Pens.Red;// linePen[item.Key];
+              foreach (Rectangle r in item.Value)
+              {
+                count++;
+                g.DrawRectangle(p, r);
+                g.DrawString(count.ToString(), drawFont, Brushes.Green, r.Location);
+              }
+            }
           }
         }
         if (weaponDictionary != null)
         {
           foreach (WeaponState weapon in weaponDictionary.Values)
           {
-            WeaponStateFlag weaponFlag = weapon.IsActive(threshHoldDictionary[0]);
+            WeaponStateFlag weaponFlag = weapon.CurrentState;
             if (weaponFlag == WeaponStateFlag.Active)
             {
               g.FillRectangle(Brushes.Red, weapon.bounds);
@@ -127,21 +156,8 @@ namespace EveAutoRat.Classes
             }
           }
         }
-        currentState.DrawDebug(g);
+        //currentState.DrawDebug(g);
       }
-      parentForm.Invoke(new Action(() =>
-      {
-        parentForm.BackgroundImage = drawBuffer.Clone(new Rectangle(0, 28, drawBuffer.Width, drawBuffer.Height-28), PixelFormat.Format24bppRgb);
-      }));
-      if (currentState != null)
-      {
-        currentState = currentState.Run(totalTime);
-        if (currentState != null)
-        {
-          return currentState.GetDelay();
-        }
-      }
-      return 100.0;
     }
   }
 }

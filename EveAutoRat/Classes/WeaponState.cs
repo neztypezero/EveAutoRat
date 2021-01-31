@@ -19,6 +19,11 @@ namespace EveAutoRat.Classes
     public Bitmap bmp;
     public Rectangle bounds;
     public string name;
+    public double clickTime = 0;
+
+    private WeaponStateFlag lastState = WeaponStateFlag.Unknown;
+    private WeaponStateFlag currentState = WeaponStateFlag.Unknown;
+    private double changeTime = 0;
 
     public WeaponState(Bitmap bmp, Rectangle bounds, string name)
     {
@@ -27,24 +32,45 @@ namespace EveAutoRat.Classes
       this.name = name;
     }
 
-    public virtual WeaponStateFlag IsActive(Bitmap screenBitmap)
+    public void SetWeaponState(Bitmap screenBitmap, double time)
     {
       Bitmap section = screenBitmap.Clone(bounds, screenBitmap.PixelFormat);
       ExhaustiveTemplateMatching tm = new ExhaustiveTemplateMatching(0.0f);
       TemplateMatch[] matchings = tm.ProcessImage(section, bmp);
+
+      WeaponStateFlag newState = WeaponStateFlag.Unknown;
       if (matchings.Length == 1)
       {
         float similarity = matchings[0].Similarity;
         if (similarity >= 0.999f)
         {
-          return WeaponStateFlag.InActive;
+          newState = WeaponStateFlag.InActive;
         }
-        if (similarity >= 0.89f)
+        else if (similarity >= 0.89f)
         {
-          return WeaponStateFlag.Active;
+          newState = WeaponStateFlag.Active;
         }
       }
-      return WeaponStateFlag.Unknown;
+      if (currentState != newState)
+      {
+        changeTime = time + 500;
+        currentState = newState;
+      }
+      if (time > changeTime)
+      {
+        if (currentState != lastState)
+        {
+          lastState = currentState;
+        }
+      }
+    }//1596, 1033, 25, 25
+
+    public virtual WeaponStateFlag CurrentState
+    {
+      get
+      {
+        return lastState;
+      }
     }
 
     public virtual bool IsNull
@@ -62,9 +88,12 @@ namespace EveAutoRat.Classes
 
     }
 
-    public override WeaponStateFlag IsActive(Bitmap screenBitmap)
+    public override WeaponStateFlag CurrentState
     {
-      return WeaponStateFlag.Unknown;
+      get
+      {
+        return WeaponStateFlag.Unknown;
+      }
     }
 
     public override bool IsNull

@@ -40,7 +40,6 @@ namespace EveAutoRat.Classes
           objectList[threshhold] = objectCounter.GetObjectsRectangles();
         }
         loadObjects = false;
-        needUpdate = false;
       }
       using (Graphics g = Graphics.FromImage(drawBuffer))
       {
@@ -89,7 +88,7 @@ namespace EveAutoRat.Classes
                 {
 //                  if (r.Width > 30 && r.Width < 80 && r.Height > 30 && r.Height < 80)
                   {
-                    bmp.Save("PixelObjects\\" + item.Key + "\\" + r.X + "_" + r.Y + "_" + r.Width + "_" + r.Height + ".bmp");
+                    //bmp.Save("PixelObjects\\" + item.Key + "\\" + r.X + "_" + r.Y + "_" + r.Width + "_" + r.Height + ".bmp");
                   }
                 }
               }

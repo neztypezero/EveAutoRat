@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace EveAutoRat
 {
@@ -207,7 +208,7 @@ namespace EveAutoRat
       return true;
     }
 
-    enum WParams : int
+    public enum WParams : int
     {
       MK_CONTROL = 0x0008, // The CTRL key is down.
       MK_LBUTTON = 0x0001, // The left mouse button is down.
@@ -217,16 +218,19 @@ namespace EveAutoRat
       MK_XBUTTON1 = 0x0020, // The first X button is down.
       MK_XBUTTON2 = 0x0040 // The second X button is down.
     }
-    enum WMessages : int
+    public enum WMessages : int
     {
+      WM_KEYDOWN = 0x0100, // Key Down
+      WM_KEYUP = 0x0101, // Key Down
       WM_MOUSEMOVE = 0x0200, // mouse move
       WM_LBUTTONDOWN = 0x201, //Left mousebutton down
       WM_LBUTTONUP = 0x202, //Left mousebutton up
       WM_RBUTTONDOWN = 0x204, //Right mousebutton down
       WM_RBUTTONUP = 0x205, //Right mousebutton up
+      WM_MOUSEWHEEL = 0x020A, // Mouse Wheel
     }
 
-    public static int MakeLParam(int LoWord, int HiWord)
+    public static int MakeParam(int LoWord, int HiWord)
     {
       return ((HiWord << 16) | (LoWord & 0xffff));
     }
@@ -236,23 +240,30 @@ namespace EveAutoRat
 
     public static void SendMouseDown(IntPtr hWnd, int x, int y)
     {
-      int LParam = MakeLParam(x, y);
+      int LParam = MakeParam(x, y);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONDOWN, 0, LParam);
     }
 
     public static void SendMouseUp(IntPtr hWnd, int x, int y)
     {
-      int LParam = MakeLParam(x, y);
+      int LParam = MakeParam(x, y);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONUP, 0, LParam);
     }
 
     public static void SendMouseClick(IntPtr hWnd, int x, int y)
     {
-      int LParam = MakeLParam(x, y-52);
+      int LParam = MakeParam(x, y - 52);
       SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONDOWN, (int)WParams.MK_LBUTTON, LParam);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONUP, (int)WParams.MK_LBUTTON, LParam);
       SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
+    }
+
+    public static void SendMouseWheel(IntPtr hWnd, int x, int y, int wheelDelta, WParams modifiers)
+    {
+      int LParam = MakeParam(-x, y - 52);
+      int WParam = MakeParam((int)modifiers, -wheelDelta);
+      SendMessage(hWnd, (int)WMessages.WM_MOUSEWHEEL, WParam, LParam);
     }
 
     public static Bitmap GetScreenBitmap(IntPtr hWnd)
