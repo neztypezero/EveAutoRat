@@ -2,7 +2,7 @@
 {
   class ActionStateInfiniteLoop : ActionState
   {
-    public ActionStateInfiniteLoop(ActionThread parent, double delay) : base(parent, delay)
+    public ActionStateInfiniteLoop(ActionThreadNewsRAT parent, double delay) : base(parent, delay)
     {
     }
 

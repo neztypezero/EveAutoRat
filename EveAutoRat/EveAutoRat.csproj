@@ -87,20 +87,24 @@
   <ItemGroup>
     <Compile Include="Classes\ActionState.cs" />
     <Compile Include="Classes\ActionStateBattle.cs" />
-    <Compile Include="Classes\ActionStateClickPoint.cs" />
-    <Compile Include="Classes\ActionStateClickWord.cs" />
-    <Compile Include="Classes\ActionStateClickWordAt.cs" />
     <Compile Include="Classes\ActionStateConfirmUntilEncounter.cs" />
     <Compile Include="Classes\ActionStateInfiniteLoop.cs" />
+    <Compile Include="Classes\ActionStateLoot.cs" />
     <Compile Include="Classes\ActionStateNOP.cs" />
+    <Compile Include="Classes\ActionStateStartEncounter.cs" />
+    <Compile Include="Classes\ActionStateUnloadCargo.cs" />
     <Compile Include="Classes\ActionThread.cs" />
     <Compile Include="Classes\ActionThreadLearn.cs" />
     <Compile Include="Classes\ActionThreadNewsRAT.cs" />
     <Compile Include="Classes\ActionThreadParameterList.cs" />
+    <Compile Include="Classes\PixelStateCargo.cs" />
     <Compile Include="Classes\OCR.cs" />
+    <Compile Include="Classes\PixelState.cs" />
+    <Compile Include="Classes\PixelStateEnemies.cs" />
+    <Compile Include="Classes\PixelStateInStation.cs" />
+    <Compile Include="Classes\PixelStateWeapons.cs" />
     <Compile Include="Classes\WeaponState.cs" />
     <Compile Include="Classes\EveAutoRatPlayer.cs" />
-    <Compile Include="Classes\LookupBits.cs" />
     <Compile Include="Classes\PixelObjectList.cs" />
     <Compile Include="Classes\Win32.cs" />
     <Compile Include="EveAutoRatMainForm.cs">
@@ -153,6 +157,51 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="PixelObjects\0\drone_infiltrator_0.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_close_dialog_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_close_wreckage_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_destination_set_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_encounter_battle_icon_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_encounter_battle_icon_journal_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_encounter_news_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_encounter_refresh_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_encounter_tile_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_eye_closed_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_eye_open_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_in_station_area_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_unload_all_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_unload_item_hanger_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_unload_move_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="PixelObjects\0\weapon_adaptive-armor-hardener_0.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -168,13 +217,10 @@
     <Content Include="PixelObjects\0\weapon_nosferatu_0.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="PixelObjects\0\weapon_nosferatu_1.bmp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="PixelObjects\0\weapon_nosferatu_2.bmp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="PixelObjects\0\weapon_pulse-laser_0.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\weapon_webifier_0.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\112\icon_close_dialog_button_001.bmp">
@@ -183,13 +229,16 @@
     <Content Include="PixelObjects\112\icon_dialog_continuation_arrow.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="PixelObjects\112\icon_enemy_targeted_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="PixelObjects\128\icon_dialog_arrow_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\128\icon_eye_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="PixelObjects\128\icon_eye_002.bmp">
+    <Content Include="PixelObjects\128\icon_target_all_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\64\icon_close_dialog_button_001.bmp">
@@ -210,11 +259,17 @@
     <Content Include="PixelObjects\64\icon_encounters_004.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="PixelObjects\80\icon_destination_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\80\icon_destination_pin_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\96\icon_destination_auto_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="PixelObjects\80\" />
-    <Folder Include="PixelObjects\96\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Tesseract.4.1.1\build\Tesseract.targets" Condition="Exists('..\packages\Tesseract.4.1.1\build\Tesseract.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

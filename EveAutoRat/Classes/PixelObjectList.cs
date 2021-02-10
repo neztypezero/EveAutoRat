@@ -50,23 +50,15 @@ namespace EveAutoRat.Classes
 
     public static List<PixelObject> GetPixelObjectList(int threshHold)
     {
-      if (objectList == null)
-      {
-        LoadObjectList();
-      }
       return objectList[threshHold];
     }
 
     public static Dictionary<string, PixelObject> GetPixelObjectDictionary(int threshHold)
     {
-      if (objectDictionary == null)
-      {
-        LoadObjectList();
-      }
       return objectDictionary[threshHold];
     }
 
-    private static void LoadObjectList()
+    public static void LoadObjectList()
     {
       objectList = new Dictionary<int, List<PixelObject>>();
       objectDictionary = new Dictionary<int, Dictionary<string, PixelObject>>();
@@ -87,24 +79,16 @@ namespace EveAutoRat.Classes
             Bitmap bmp = new Bitmap(imagePath);
             String[] imagePathSplit = imagePath.Split('\\');
             String imageFile = imagePathSplit[imagePathSplit.Length - 1];
-            if (imageFile.StartsWith("icon"))
+            if (imageFile.StartsWith("icon") || imageFile.StartsWith("weapon"))
             {
               int fu = imageFile.IndexOf('_');
               int lu = imageFile.LastIndexOf('_');
               String text = imageFile.Substring(fu + 1, lu - fu - 1);
-              PixelObject po = new PixelObject(bmp.Clone(new Rectangle(0, 0, bmp.Width, bmp.Height), PixelFormat.Format24bppRgb), text);
+              String type = imageFile.Substring(0, fu);
+              PixelObject po = new PixelObject(bmp.Clone(new Rectangle(0, 0, bmp.Width, bmp.Height), PixelFormat.Format24bppRgb), text, type);
               poList.Add(po);
               poDictionary[text] = po;
             } 
-            else if (imageFile.StartsWith("weapon"))
-            {
-              int fu = imageFile.IndexOf('_');
-              int lu = imageFile.LastIndexOf('.');
-              String text = imageFile.Substring(fu + 1, lu - fu - 1);
-              PixelObject po = new PixelObject(bmp.Clone(new Rectangle(0, 0, bmp.Width, bmp.Height), PixelFormat.Format24bppRgb), text);
-              poList.Add(po);
-              poDictionary[text] = po;
-            }
           }
         }
       }
@@ -130,11 +114,13 @@ namespace EveAutoRat.Classes
   {
     public Bitmap bmp;
     public String text;
+    public String type;
 
-    public PixelObject(Bitmap bmp, String text)
+    public PixelObject(Bitmap bmp, String text, String type)
     {
       this.bmp = bmp;
       this.text = text;
+      this.type = type;
     }
   }
 }

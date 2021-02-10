@@ -1,21 +1,14 @@
-﻿using AForge.Imaging.Filters;
-using System;
+﻿using System.Threading;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System;
+using System.Collections.Generic;
 
 namespace EveAutoRat.Classes
 {
-  class ActionStateBattle : ActionState
+  public class ActionStateBattle : ActionState
   {
-    private ActionThreadNewsRAT ratParent;
-
-    private Grayscale battleIconGrayFilter = new Grayscale(1.0, 0.0, 0.0);
-    private ColorFiltering battleIconRedFilter = new ColorFiltering(new AForge.IntRange(150, 255), new AForge.IntRange(22, 38), new AForge.IntRange(40, 60));
-    private ColorFiltering whiteFilter = new ColorFiltering(new AForge.IntRange(200, 255), new AForge.IntRange(200, 255), new AForge.IntRange(200, 255));
-    private Threshold battleIconThresholdFilter = new Threshold(50);
-
     private double lootingTime = 0;
-    private double approachingTime = 0;
     private double targetAllTime = 0;
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
@@ -27,7 +20,16 @@ namespace EveAutoRat.Classes
 
     public ActionStateBattle(ActionThreadNewsRAT parent, double delay) : base(parent, delay)
     {
-      ratParent = parent;
+    }
+
+    public override void Reset()
+    {
+      battleOverWaitTime = 0;
+      battleOver = false;
+      looting = 0;
+      lootingTime = 0;
+      wordSearch = null;
+      searchBounds = NullRect;
     }
 
     public override int GetThreshHold()
@@ -35,36 +37,7 @@ namespace EveAutoRat.Classes
       return 128;
     }
 
-    public Rectangle[] GetEnemyBounds()
-    {
-      Bitmap screenBmp = threshHoldDictionary[0];
-      Bitmap iconColumnEnemies = screenBmp.Clone(battleIconBounds, PixelFormat.Format24bppRgb);
-      iconColumnEnemies = battleIconRedFilter.Apply(iconColumnEnemies);
-      iconColumnEnemies = battleIconGrayFilter.Apply(iconColumnEnemies);
-      iconColumnEnemies = battleIconThresholdFilter.Apply(iconColumnEnemies);
-
-      objectCounter.ProcessImage(iconColumnEnemies);
-      return objectCounter.GetObjectsRectangles();
-    }
-
-    public Rectangle GetFirstLootBounds()
-    {
-      using (Bitmap iconColumnLoot = threshHoldDictionary[64].Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
-      {
-        objectCounter.ProcessImage(iconColumnLoot);
-      }
-      Rectangle[] lootRectList = objectCounter.GetObjectsRectangles();
-      foreach (Rectangle r in lootRectList)
-      {
-        if (r.Width > 12)
-        {
-          return new Rectangle(r.X + firstBattleIconBounds.X, r.Y + firstBattleIconBounds.Y, r.Width, r.Height);
-        }
-      }
-      return NullRect;
-    }
-
-    public bool IsFirstTargetActivated()
+    public bool GetFirstActivatedTarget()
     {
       using (Bitmap iconColumnLoot = threshHoldDictionary[64].Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
       {
@@ -95,36 +68,57 @@ namespace EveAutoRat.Classes
       return new Point(-1, -1);
     }
 
-    public Rectangle FindTargetAll(Bitmap src)
+    public WeaponState GetWeapon()
     {
-      using (Bitmap bmp = src.Clone(targetAllBounds, PixelFormat.Format24bppRgb))
+      Dictionary<string, WeaponState> weaponsState = parent.WeaponsState;
+      foreach (WeaponState weapon in weaponsState.Values)
       {
-        objectCounter.ProcessImage(bmp);
-      }
-      Rectangle[] rects = objectCounter.GetObjectsRectangles();
-      foreach (Rectangle r in rects)
-      {
-        if (r.Width > 30 && r.Height > 30)
+        if (weapon.name.StartsWith("pulse-laser"))
         {
-          return new Rectangle(r.X + targetAllBounds.X, r.Y + targetAllBounds.Y, r.Width, r.Height);
+          return weapon;
         }
       }
-      return NullRect;
+      return null;
     }
-    //
+
     public override ActionState Run(double totalTime)
     {
       Bitmap screenBmp = threshHoldDictionary[0];
       Bitmap bmp64 = threshHoldDictionary[64];
       Bitmap bmp128 = threshHoldDictionary[128];
 
+      Rectangle[] enemyBoundsList = GetEnemyBounds();
+
+      int enemyTargetedCount = GetTargetEnemyCount();
+
+      WeaponState pulseLaser = GetWeapon();
+      if (enemyTargetedCount == 0 && enemyBoundsList.Length > 0 && totalTime > pulseLaser.clickTime)
+      {
+        Rectangle er = enemyBoundsList[0];
+        er.X += battleIconBounds.X;
+        er.Y += battleIconBounds.Y;
+        lastClick = parent.GetClickPoint(er);
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        Thread.Sleep(50);
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+
+        if (pulseLaser.CurrentState == WeaponStateFlag.InActive)
+        {
+          lastClick = parent.GetClickPoint(pulseLaser.bounds);
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          pulseLaser.clickTime = totalTime + 10000;
+        }
+        targetAllTime = totalTime + 5000;
+        nextDelay = 2000;
+        return this;
+      }
+
       if (totalTime > targetAllTime)
       {
-        Rectangle targetAll = FindTargetAll(bmp128);
-        if (targetAll.X > -1)
+        if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
         {
           targetAllTime = totalTime + 5000;
-          lastClick = parent.GetClickPoint(targetAll);
+          lastClick = parent.GetClickPoint(targetAllBounds);
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           return this;
         }
@@ -145,56 +139,52 @@ namespace EveAutoRat.Classes
           }
           return this;
         }
+        else
+        {
+          if (looting > 0 && totalTime > lootingTime)
+          {
+            looting = 0;
+            lootingTime = 0;
+            wordSearch = null;
+            searchBounds = NullRect;
+          }
+          else
+          {
+            return this;
+          }
+        }
       }
-      Rectangle[] battleIconRectList = GetEnemyBounds();
-
-      //if (looting != 0)
-      //{
-      //  if (looting == 1 && wordSearch == null)
-      //  {
-      //    looting = 2;
-      //    wordSearch = "Loot";
-      //    searchBounds = lootAllBounds;
-      //    lootingTime = totalTime + 5000;
-      //  }
-      //  return this;
-      //}
-
-      //double distance = -1;
-      //Rectangle dr = FindDouble(ref distance, firstItemDistanceBounds);
-      //if (distance < 9 || battleOver)
-      //{
-      //  Rectangle lootBounds = GetFirstLootBounds();
-      //  if (lootBounds.X > -1)
-      //  {
-      //    Point center = parent.GetClickPoint(lootBounds);
-      //    Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-      //    lastClick = center;
-
-      //    nextDelay = 1500;
-      //    wordSearch = "Loot";
-      //    searchBounds = popupBounds;
-      //    looting = 1;
-
-      //    return this;
-      //  }
-      //}
-
-      Point enemyPoint = FindFirstEnemy(battleIconRectList);
-      if (enemyPoint.X > -1)
+      if (battleOver)
       {
-        battleOverWaitTime = 0;
-        battleOver = false;
-      } 
-      else
+        if (pulseLaser != null)
+        {
+          foreach (WeaponState weapon in parent.WeaponsState.Values)
+          {
+            if (weapon.CurrentState == WeaponStateFlag.Active)
+            {
+              if (totalTime > weapon.clickTime && !weapon.name.StartsWith("afterburner"))
+              {
+                lastClick = parent.GetClickPoint(weapon.bounds);
+                Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+                weapon.clickTime = totalTime + 10000;
+                return this;
+              }
+            }
+          }
+        }
+
+      }
+
+      Point enemyPoint = FindFirstEnemy(enemyBoundsList);
+      if (enemyPoint.X == -1)
       {
-        Rectangle battleOverRect = FindIcon(battleOverDialogArrowBounds, "dialog_arrow", 128);
+        Rectangle battleOverRect = FindIcon(dialogArrowBounds, "dialog_arrow", 128);
         if (battleOverRect.X > -1)
         {
           battleOver = true;
           lastClick = parent.GetClickPoint(battleOverRect);
-          lastClick.X += battleOverDialogArrowBounds.X;
-          lastClick.Y += battleOverDialogArrowBounds.Y;
+          lastClick.X += dialogArrowBounds.X;
+          lastClick.Y += dialogArrowBounds.Y;
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           nextDelay = 400;
           return this;
@@ -207,28 +197,21 @@ namespace EveAutoRat.Classes
           }
           else if (totalTime > battleOverWaitTime)
           {
-            return nextState;
+            return NextState;
           }
         }
+      }
+      else
+      {
+        battleOverWaitTime = 0;
+        battleOver = false;
       }
 
-      WeaponState pulseLaser = null;
-      if (ratParent.allWeaponsLoaded)
-      {
-        foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
-        {
-          if (weapon.name.StartsWith("pulse-laser"))
-          {
-            pulseLaser = weapon;
-            break;
-          }
-        }
-      }
       if (pulseLaser != null)
       {
         if (pulseLaser.CurrentState == WeaponStateFlag.Active)
         {
-          foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
+          foreach (WeaponState weapon in parent.WeaponsState.Values)
           {
             if (weapon.CurrentState == WeaponStateFlag.InActive)
             {
@@ -236,173 +219,9 @@ namespace EveAutoRat.Classes
               {
                 lastClick = parent.GetClickPoint(weapon.bounds);
                 Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-                weapon.clickTime = totalTime + 2500;
+                weapon.clickTime = totalTime + 5000;
                 return this;
               }
-            }
-          }
-        }
-      }
-
-      return this;
-    }
-
-    public ActionState OldRun(double totalTime)
-    {
-      Bitmap screenBmp = threshHoldDictionary[0];
-      Bitmap bmp64 = threshHoldDictionary[64];
-      Bitmap bmp128 = threshHoldDictionary[128];
-
-      if (totalTime > targetAllTime)
-      {
-        Rectangle targetAll = FindTargetAll(bmp128);
-        if (targetAll.X > -1)
-        {
-          targetAllTime = totalTime + 5000;
-          lastClick = parent.GetClickPoint(targetAll);
-          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-          return this;
-        }
-      }
-
-      if (wordSearch != null)
-      {
-        Rectangle found = FindWord(wordSearch, searchBounds);
-        if (found.X != -1)
-        {
-          lastClick = parent.GetClickPoint(found);
-          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-          if (looting == 2)
-          {
-            looting = 0;
-            nextDelay = 3000;
-          }
-          else
-          {
-            nextDelay = 1500;
-          }
-          wordSearch = null;
-          searchBounds = NullRect;
-          return this;
-        }
-      }
-      if (looting != 0)
-      {
-        if (wordSearch == null)
-        {
-          looting = 2;
-          wordSearch = "Loot";
-          searchBounds = lootAllBounds;
-          lootingTime = totalTime + 5000;
-        }
-        return this;
-      }
-
-      Rectangle[] battleIconRectList = GetEnemyBounds();
-
-      double distance = FindSingleDouble(96, firstItemDistanceBounds);
-      Point enemyPoint = FindFirstEnemy(battleIconRectList);
-
-      if (totalTime > lootingTime && (enemyPoint.X == -1 || distance < 10))
-      {
-        Rectangle lootBounds = GetFirstLootBounds();
-        if (lootBounds.Width > 0)
-        {
-          Point center = parent.GetClickPoint(lootBounds);
-          Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-          lastClick = center;
-
-          nextDelay = 1500;
-          wordSearch = "Loot";
-          searchBounds = popupBounds;
-          looting = 1;
-
-          return this;
-        }
-      }
-      WeaponState pulseLaser = null;
-      if (!Double.IsNaN(distance) && distance < 20)
-      {
-        foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
-        {
-          if (weapon.name != null && weapon.name.StartsWith("pulse-laser"))
-          {
-            pulseLaser = weapon;
-            break;
-          }
-        }
-
-        if (pulseLaser != null)
-        {
-          if (pulseLaser.CurrentState == WeaponStateFlag.InActive)
-          {
-            if (enemyPoint.X > -1)
-            {
-              Win32.SendMouseClick(eventHWnd, enemyPoint.X, enemyPoint.Y);
-              lastClick = enemyPoint;
-
-              nextDelay = 1500;
-              wordSearch = "Focus";
-              searchBounds = popupBounds;
-
-              return this;
-            }
-          }
-          else if (enemyPoint.X > -1 && pulseLaser.CurrentState == WeaponStateFlag.Active)
-          {
-            foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
-            {
-              if (weapon.name.StartsWith("heat-sink") || weapon.name.StartsWith("nosferatu"))
-              {
-                if (weapon.CurrentState == WeaponStateFlag.InActive)
-                {
-                  Point center = parent.GetClickPoint(weapon.bounds);
-                  Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-                  lastClick = center;
-                  nextDelay = 1500;
-                  return this;
-                }
-              }
-            }
-          }
-        }
-      }
-      if (totalTime > approachingTime)
-      {
-        Point center = FindFirstEnemy(battleIconRectList);
-        if (center.X > -1)
-        {
-          Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-          lastClick = center;
-
-          if (Double.IsNaN(distance) || distance > 30)
-          {
-            wordSearch = "Approach";
-          }
-          else
-          {
-            wordSearch = "Orbit";
-          }
-          searchBounds = popupBounds;
-          approachingTime = totalTime + 30000;
-
-          return this;
-        }
-      }
-
-      if (enemyPoint.X > -1)
-      {
-        foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
-        {
-          if (weapon.name != null && (weapon.name.StartsWith("armor-repairer") || weapon.name.StartsWith("adaptive-armor-hardener")))
-          {
-            if (weapon.CurrentState == WeaponStateFlag.InActive)
-            {
-              Point center = parent.GetClickPoint(weapon.bounds);
-              Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-              lastClick = center;
-              nextDelay = 1500;
-              return this;
             }
           }
         }
@@ -419,8 +238,6 @@ namespace EveAutoRat.Classes
       Brush nextClickColor = new SolidBrush(Color.FromArgb(200, 250, 250, 50));
       g.FillRectangle(debugBackgroundColor, searchBounds);
       g.FillEllipse(nextClickColor, new Rectangle(lastClick.X - 15, lastClick.Y - 15, 30, 30));
-
-      //g.FillRectangle(debugBackgroundColor, lastFoundDoubleBounds);
     }
   }
 }

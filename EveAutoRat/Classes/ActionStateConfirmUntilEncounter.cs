@@ -3,34 +3,27 @@ using System.Drawing.Imaging;
 
 namespace EveAutoRat.Classes
 {
-  class ActionStateConfirmUntilEncounter : ActionState
+  public class ActionStateConfirmUntilEncounter : ActionState
   {
-    private ActionThreadNewsRAT ratParent;
-    private ActionStateBattle battleState;
     private string wordSearch = null;
     private Rectangle ZeroBounds = new Rectangle(0, 0, 0, 0);
     private Rectangle wordSearchBounds;
-    private double zoomOutUntil = 0;
 
-    public ActionStateConfirmUntilEncounter(ActionThreadNewsRAT parent, double delay, ActionStateBattle battleState) : base(parent, delay)
+    public ActionStateConfirmUntilEncounter(ActionThreadNewsRAT parent, double delay) : base(parent, delay)
     {
-      this.ratParent = parent;
-      this.battleState = battleState;
-      SetNextState(battleState);
+      wordSearchBounds = ZeroBounds;
+    }
+
+    public override void Reset()
+    {
+      wordSearch = null;
       wordSearchBounds = ZeroBounds;
     }
 
     public override ActionState Run(double totalTime)
     {
-      if (totalTime < zoomOutUntil)
-      {
-        Win32.SendMouseWheel(eventHWnd, threshHoldDictionary[0].Width / 2, threshHoldDictionary[0].Height / 2, 120, Win32.WParams.MK_CONTROL);
-        nextDelay = 100;
-        return this;
-      }
-
-      Rectangle[] enemyBoundsList = battleState.GetEnemyBounds();
-      Bitmap bmp = parent.threshHoldDictionary[128];
+      Rectangle[] enemyBoundsList = GetEnemyBounds();
+      Bitmap bmp128 = parent.threshHoldDictionary[128];
 
       if (wordSearch != null)
       {
@@ -42,8 +35,6 @@ namespace EveAutoRat.Classes
           nextDelay = 1500;
           wordSearch = null;
           wordSearchBounds = ZeroBounds;
-
-          zoomOutUntil = totalTime + 2500;
           return this;
         }
       }
@@ -51,39 +42,39 @@ namespace EveAutoRat.Classes
       string confirmText = FindSingleWord(threshHoldDictionary[128], confirmBounds);
       if (confirmText == "Confirm")
       {
-        Point center = parent.GetClickPoint(confirmBounds);
-        Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-        nextDelay = 2000;
+        lastClick = parent.GetClickPoint(confirmBounds);
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        nextDelay = 1000;
         return this;
       }
 
-      foreach (WeaponState weapon in ratParent.weaponDictionary.Values)
+      foreach (WeaponState weapon in parent.WeaponsState.Values)
       {
         if (weapon.name != null && weapon.name.StartsWith("pulse-laser"))
         {
           if (weapon.CurrentState == WeaponStateFlag.InActive)
           {
-            using (Bitmap eyeBmp = bmp.Clone(eyeBounds, PixelFormat.Format24bppRgb))
+            float eyeClosed = FindIconSimilarity(bmp128, "eye", eyeClosedBounds, 128);
+            if (eyeClosed > 0.90f)
             {
-              Rectangle poBounds = PixelObjectList.FindBitmap(eyeBmp, "eye", 128);
-              if (poBounds.X > eyeBounds.Width / 2)
+              lastClick = parent.GetClickPoint(eyeClosedBounds);
+              Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+              nextDelay = 1000;
+              return this;
+            }
+            float eyeOpen = FindIconSimilarity(bmp128, "eye", eyeOpenBounds, 128);
+            if (eyeOpen > 0.9f)
+            {
+              string filterTitle = FindSingleWord(threshHoldDictionary[64], filterTitleBounds);
+              if (filterTitle != "Pirates")
               {
-                Point center = parent.GetClickPoint(new Rectangle(eyeBounds.X + poBounds.X, eyeBounds.Y + poBounds.Y, poBounds.Width, poBounds.Height));
-                Win32.SendMouseClick(eventHWnd, center.X, center.Y);
+                lastClick = parent.GetClickPoint(filterTitleBounds);
+                Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
                 nextDelay = 1000;
+                wordSearch = "Pirates";
+                wordSearchBounds = filterListBounds;
                 return this;
               }
-            }
-
-            string filterTitle = FindSingleWord(threshHoldDictionary[64], filterTitleBounds);
-            if (filterTitle != "PiratesLoot")
-            {
-              Point center = parent.GetClickPoint(filterTitleBounds);
-              Win32.SendMouseClick(eventHWnd, center.X, center.Y);
-              nextDelay = 1000;
-              wordSearch = "PiratesLoot";
-              wordSearchBounds = filterListBounds;
-              return this;
             }
           }
           break;
@@ -92,20 +83,13 @@ namespace EveAutoRat.Classes
 
       if (enemyBoundsList != null && enemyBoundsList.Length > 0)
       {
-        nextDelay = 12000;
-        return battleState;
+        if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
+        {
+          return NextState;
+        }
       }
 
       return this;
-    }
-
-    public override ActionState SetNextState(ActionState nextState)
-    {
-      if (battleState != null)
-      {
-        return battleState.SetNextState(nextState);
-      }
-      return base.SetNextState(nextState);
     }
   }
 }

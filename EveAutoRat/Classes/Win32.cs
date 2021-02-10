@@ -225,6 +225,7 @@ namespace EveAutoRat
       WM_MOUSEMOVE = 0x0200, // mouse move
       WM_LBUTTONDOWN = 0x201, //Left mousebutton down
       WM_LBUTTONUP = 0x202, //Left mousebutton up
+      WM_LBUTTONDBLCLK = 0x0203, // Double click
       WM_RBUTTONDOWN = 0x204, //Right mousebutton down
       WM_RBUTTONUP = 0x205, //Right mousebutton up
       WM_MOUSEWHEEL = 0x020A, // Mouse Wheel
@@ -256,6 +257,14 @@ namespace EveAutoRat
       SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONDOWN, (int)WParams.MK_LBUTTON, LParam);
       SendMessage(hWnd, (int)WMessages.WM_LBUTTONUP, (int)WParams.MK_LBUTTON, LParam);
+      SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
+    }
+
+    public static void SendMouseDblClick(IntPtr hWnd, int x, int y)
+    {
+      int LParam = MakeParam(x, y - 52);
+      SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
+      SendMessage(hWnd, (int)WMessages.WM_LBUTTONDBLCLK, (int)WParams.MK_LBUTTON, LParam);
       SendMessage(hWnd, (int)WMessages.WM_MOUSEMOVE, 0, LParam);
     }
 

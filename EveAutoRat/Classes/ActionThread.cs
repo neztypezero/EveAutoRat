@@ -17,7 +17,6 @@ namespace EveAutoRat.Classes
     protected Grayscale grayScaleFilter = new Grayscale(0.2125, 0.7154, 0.0721);
     public int[] threshHoldList = new int[] { 64, 80, 96, 112, 128 };
     public Dictionary<int, Bitmap> threshHoldDictionary = new Dictionary<int, Bitmap>();
-    public Dictionary<Rectangle, List<Rectangle>> lineBoundsDictionary;
     protected Bitmap currentFrame = null;
     public bool running = false;
 
@@ -25,6 +24,7 @@ namespace EveAutoRat.Classes
 
     public ActionThread(EveAutoRatMainForm parentForm, IntPtr emuHWnd, IntPtr eventHWnd)
     {
+      PixelObjectList.LoadObjectList();
       this.parentForm = parentForm;
       this.emuHWnd = emuHWnd;
       this.eventHWnd = eventHWnd;
@@ -72,8 +72,6 @@ namespace EveAutoRat.Classes
             using (Bitmap screenBmp = Win32.GetScreenBitmap(emuHWnd))
             {
               Win32.CopyScreenBitmap(emuHWnd, screenBmp);
-              //StepEvery(lastTime);
-              //Console.WriteLine(lastTime);
 
               StepEvery(screenBmp, currentTime);
 
@@ -88,10 +86,13 @@ namespace EveAutoRat.Classes
                 }
               }
               Draw(screenBmp);
-              parentForm.Invoke(new Action(() =>
+              if (parentForm.Created)
               {
-                parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
-              }));
+                parentForm.Invoke(new Action(() =>
+                {
+                  parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
+                }));
+              }
             }
           }
         }
