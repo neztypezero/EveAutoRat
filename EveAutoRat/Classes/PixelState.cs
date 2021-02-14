@@ -15,7 +15,7 @@ namespace EveAutoRat.Classes
     protected static Rectangle encounterBattleIconBounds = new Rectangle(368, 369, 44, 45);
     protected static Rectangle encounterBattleIconJournalBounds = new Rectangle(837, 611, 58, 58);
     protected static Rectangle encounterAcceptBounds = new Rectangle(1370, 940, 120, 50);
-    protected static Rectangle encounterBeginBounds = new Rectangle(1480, 940, 110, 50);
+    protected static Rectangle encounterBeginBounds = new Rectangle(1260, 940, 400, 50);
     protected static Rectangle encounterRefreshBounds = new Rectangle(1086, 249, 44, 45);
 
     protected static Rectangle eyeClosedZeroBounds = new Rectangle(1837, 646, 21, 20);
@@ -36,6 +36,7 @@ namespace EveAutoRat.Classes
     protected static Rectangle targetAllBounds = new Rectangle(1167, 707, 69, 62);
     protected static Rectangle filterListBounds = new Rectangle(1650, 200, 250, 725);
     protected static Rectangle dialogArrowBounds = new Rectangle(810, 400, 50, 215);
+    protected static Rectangle dialogSelfArrowBounds = new Rectangle(1640, 335, 45, 220);
     protected static Rectangle destinationClosedBounds = new Rectangle(23, 288, 25, 36);
     protected static Rectangle destinationOpenBounds = new Rectangle(405, 288, 25, 36);
     protected static Rectangle destinationSetBounds = new Rectangle(96, 290, 29, 28);
@@ -51,6 +52,9 @@ namespace EveAutoRat.Classes
     protected static Rectangle closeWreckageBounds = new Rectangle(1153, 159, 32, 32);
     protected static Rectangle inStationCheckBounds = new Rectangle(1700, 55, 100, 2);
     protected static Rectangle cargoHoldBounds = new Rectangle(6, 255, 140, 1);
+    protected static Rectangle stationNameBounds = new Rectangle(1590, 260, 320, 36);
+    protected static Rectangle jumpToBounds = new Rectangle(55, 470, 280, 36);
+    protected static Rectangle noSearchResultsBounds = new Rectangle(1580, 625, 300, 60);
 
     protected static Rectangle[] weaponBoundsList = new Rectangle[] {
       new Rectangle(1202, 859, 110, 110),
@@ -289,6 +293,67 @@ namespace EveAutoRat.Classes
       }
       return 0;
     }
+
+    public int GetStringSimilarity(string s, string t)
+    {
+      if (string.IsNullOrEmpty(s))
+      {
+        throw new ArgumentNullException(s, "String Cannot Be Null Or Empty");
+      }
+
+      if (string.IsNullOrEmpty(t))
+      {
+        throw new ArgumentNullException(t, "String Cannot Be Null Or Empty");
+      }
+
+      int n = s.Length; // length of s
+      int m = t.Length; // length of t
+
+      if (n == 0)
+      {
+        return m;
+      }
+
+      if (m == 0)
+      {
+        return n;
+      }
+
+      int[] p = new int[n + 1]; //'previous' cost array, horizontally
+      int[] d = new int[n + 1]; // cost array, horizontally
+
+      // indexes into strings s and t
+      int i; // iterates through s
+      int j; // iterates through t
+
+      for (i = 0; i <= n; i++)
+      {
+        p[i] = i;
+      }
+
+      for (j = 1; j <= m; j++)
+      {
+        char tJ = t[j - 1]; // jth character of t
+        d[0] = j;
+
+        for (i = 1; i <= n; i++)
+        {
+          int cost = s[i - 1] == tJ ? 0 : 1; // cost
+                                             // minimum of cell to the left+1, to the top+1, diagonally left and up +cost                
+          d[i] = Math.Min(Math.Min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
+        }
+
+        // copy current distance counts to 'previous row' distance counts
+        int[] dPlaceholder = p; //placeholder to assist in swapping p and d
+        p = d;
+        d = dPlaceholder;
+      }
+
+      // our last action in the above loop was to switch d and p, so p now 
+      // actually has the most recent cost counts
+      return p[n];
+    }
+
     public virtual void Draw(Graphics g)
     {
 

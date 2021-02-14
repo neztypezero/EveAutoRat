@@ -31,7 +31,21 @@ namespace EveAutoRat.Classes
 
       objectCounter.ProcessImage(iconColumnEnemies);
       iconColumnEnemies.Dispose();
-      return objectCounter.GetObjectsRectangles();
+      Rectangle[] rList = objectCounter.GetObjectsRectangles();
+
+      return rList;
+    }
+
+    public Rectangle GetSmallestEnemyBounds(Rectangle[] enemyList)
+    {
+      foreach (Rectangle r in enemyList)
+      {
+        if (r.Height > 9 && r.Height < 13)
+        {
+          return r;
+        }
+      }
+      return enemyList[0];
     }
 
     public int GetTargetEnemyCount()
@@ -42,6 +56,19 @@ namespace EveAutoRat.Classes
         Rectangle r = new Rectangle(0,0,iconColumnEnemies.Width,iconColumnEnemies.Height);
         return FindIconSimilarityCount(iconColumnEnemies, "enemy_targeted", r, 112, 0.9f);
       }
+    }
+
+    public WeaponState GetWeapon()
+    {
+      Dictionary<string, WeaponState> weaponsState = parent.WeaponsState;
+      foreach (WeaponState weapon in weaponsState.Values)
+      {
+        if (weapon.name.StartsWith("pulse-laser"))
+        {
+          return weapon;
+        }
+      }
+      return null;
     }
 
     public virtual ActionState NextState

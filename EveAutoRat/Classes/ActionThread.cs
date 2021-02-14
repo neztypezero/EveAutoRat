@@ -90,7 +90,13 @@ namespace EveAutoRat.Classes
               {
                 parentForm.Invoke(new Action(() =>
                 {
-                  parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
+                  lock(parentForm)
+                  {
+                    if (!parentForm.IsDisposed)
+                    {
+                      parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
+                    }
+                  }
                 }));
               }
             }

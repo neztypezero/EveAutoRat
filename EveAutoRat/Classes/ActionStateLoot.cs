@@ -66,7 +66,7 @@ namespace EveAutoRat.Classes
             looting = 0;
             wordSearch = null;
             wordSearchBounds = NullBounds;
-            nextDelay = 2000;
+            nextDelay = 3000;
           }
           else
           {
@@ -105,12 +105,17 @@ namespace EveAutoRat.Classes
         Rectangle lootBounds = GetFirstLootBounds();
         if (lootBounds.X > -1)
         {
+          string noSearchResults = FindSingleWord(bmp64, noSearchResultsBounds);
+          if (noSearchResults.Contains("NO") && noSearchResults.Contains("SEARCH") && noSearchResults.Contains("RESULTS"))
+          {
+            return NextState;
+          }
           lastClick = parent.GetClickPoint(lootBounds);
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           wordSearch = "Loot";
           wordSearchBounds = popupBounds;
           looting = 1;
-          lootingTime = totalTime + 1500;
+          lootingTime = totalTime + 2500;
           return this;
         }
         else

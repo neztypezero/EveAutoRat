@@ -30,10 +30,10 @@ namespace EveAutoRat.Classes
 
       currentState = new ActionStateNOP(this, 100);
       currentState
-        //.SetNextState(new ActionStateUnloadCargo(this, 2000))
-        //.SetNextState(new ActionStateStartEncounter(this, 500))
-        //.SetNextState(new ActionStateConfirmUntilEncounter(this, 100))
-        //.SetNextState(new ActionStateBattle(this, 100))
+        .SetNextState(new ActionStateUnloadCargo(this, 2000))
+        .SetNextState(new ActionStateStartEncounter(this, 500))
+        .SetNextState(new ActionStateConfirmUntilEncounter(this, 100))
+        .SetNextState(new ActionStateBattle(this, 100))
         .SetNextState(new ActionStateLoot(this, 1000))
         .SetNextState(currentState)
       ;

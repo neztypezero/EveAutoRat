@@ -12,6 +12,7 @@ namespace EveAutoRat.Classes
     private double targetAllTime = 0;
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
+    private bool smallShips = true;
 
     private int looting = 0;
 
@@ -30,6 +31,7 @@ namespace EveAutoRat.Classes
       lootingTime = 0;
       wordSearch = null;
       searchBounds = NullRect;
+      smallShips = true;
     }
 
     public override int GetThreshHold()
@@ -68,19 +70,6 @@ namespace EveAutoRat.Classes
       return new Point(-1, -1);
     }
 
-    public WeaponState GetWeapon()
-    {
-      Dictionary<string, WeaponState> weaponsState = parent.WeaponsState;
-      foreach (WeaponState weapon in weaponsState.Values)
-      {
-        if (weapon.name.StartsWith("pulse-laser"))
-        {
-          return weapon;
-        }
-      }
-      return null;
-    }
-
     public override ActionState Run(double totalTime)
     {
       Bitmap screenBmp = threshHoldDictionary[0];
@@ -94,13 +83,14 @@ namespace EveAutoRat.Classes
       WeaponState pulseLaser = GetWeapon();
       if (enemyTargetedCount == 0 && enemyBoundsList.Length > 0 && totalTime > pulseLaser.clickTime)
       {
-        Rectangle er = enemyBoundsList[0];
+        Rectangle er = GetSmallestEnemyBounds(enemyBoundsList);
         er.X += battleIconBounds.X;
         er.Y += battleIconBounds.Y;
         lastClick = parent.GetClickPoint(er);
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-        Thread.Sleep(50);
+        Thread.Sleep(25);
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        Thread.Sleep(250);
 
         if (pulseLaser.CurrentState == WeaponStateFlag.InActive)
         {
@@ -109,7 +99,7 @@ namespace EveAutoRat.Classes
           pulseLaser.clickTime = totalTime + 10000;
         }
         targetAllTime = totalTime + 5000;
-        nextDelay = 2000;
+        nextDelay = 3000;
         return this;
       }
 
@@ -172,7 +162,6 @@ namespace EveAutoRat.Classes
             }
           }
         }
-
       }
 
       Point enemyPoint = FindFirstEnemy(enemyBoundsList);
@@ -187,15 +176,25 @@ namespace EveAutoRat.Classes
           lastClick.Y += dialogArrowBounds.Y;
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           nextDelay = 400;
+          battleOverWaitTime = totalTime + 2500;
           return this;
         }
         if (battleOver)
         {
-          if (battleOverWaitTime == 0)
+          Rectangle battleOverRect2 = FindIcon(dialogSelfArrowBounds, "dialog_arrow", 128);
+          if (battleOverRect2.X > -1)
           {
-            battleOverWaitTime = totalTime + 5000;
+            battleOver = true;
+            lastClick = parent.GetClickPoint(battleOverRect2);
+            lastClick.X += dialogArrowBounds.X;
+            lastClick.Y += dialogArrowBounds.Y;
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            battleOverWaitTime = totalTime + 2500;
+            nextDelay = 400;
+            return this;
           }
-          else if (totalTime > battleOverWaitTime)
+
+          if (totalTime > battleOverWaitTime)
           {
             return NextState;
           }

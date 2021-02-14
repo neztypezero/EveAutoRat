@@ -23,6 +23,7 @@ namespace EveAutoRat.Classes
     public override ActionState Run(double totalTime)
     {
       Rectangle[] enemyBoundsList = GetEnemyBounds();
+      Bitmap bmp64 = parent.threshHoldDictionary[64];
       Bitmap bmp128 = parent.threshHoldDictionary[128];
 
       if (wordSearch != null)
@@ -65,7 +66,7 @@ namespace EveAutoRat.Classes
             float eyeOpen = FindIconSimilarity(bmp128, "eye", eyeOpenBounds, 128);
             if (eyeOpen > 0.9f)
             {
-              string filterTitle = FindSingleWord(threshHoldDictionary[64], filterTitleBounds);
+              string filterTitle = FindSingleWord(bmp64, filterTitleBounds);
               if (filterTitle != "Pirates")
               {
                 lastClick = parent.GetClickPoint(filterTitleBounds);

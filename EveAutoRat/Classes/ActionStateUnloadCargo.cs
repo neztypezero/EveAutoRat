@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace EveAutoRat.Classes
 {
@@ -24,20 +25,16 @@ namespace EveAutoRat.Classes
     public override ActionState Run(double totalTime)
     {
       Bitmap bmp0 = threshHoldDictionary[0];
+      Bitmap bmp64 = threshHoldDictionary[64];
       Bitmap bmp80 = threshHoldDictionary[80];
       Bitmap bmp96 = threshHoldDictionary[96];
+      Bitmap bmp128 = threshHoldDictionary[128];
 
-      if (parent.CurrentHoldAmount > 0.90)
+      if (parent.CurrentHoldAmount > 0.90 || (parent.InsideState == InsideFlag.Inside && parent.CurrentHoldAmount > 0.10) || currentDestinationState != UnloadCargoStateFlag.Unknown)
       {
         if (currentDestinationState == UnloadCargoStateFlag.Unknown)
         {
-          Rectangle found = FindWord("Undock", undockBounds);
-          if (found.X > -1)
-          {
-            currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
-            return this;
-          }
-
+          
           float destinationClosed = FindIconSimilarity(bmp80, "destination", destinationClosedBounds, 80);
           if (destinationClosed > 0.9f)
           {
@@ -48,12 +45,24 @@ namespace EveAutoRat.Classes
           float destinationOpen = FindIconSimilarity(bmp80, "destination", destinationOpenBounds, 80);
           if (destinationOpen > 0.9f)
           {
+            if (parent.InsideState == InsideFlag.Inside)
+            {
+              string stationName = FindSingleWord(bmp64, stationNameBounds);
+              string jumpToName = FindSingleWord(bmp64, jumpToBounds);
+              int n = GetStringSimilarity(stationName, jumpToName);
+              if (n < 2)
+              {
+                currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
+                return this;
+              }
+            }
             float destinationPin = FindIconSimilarity(bmp80, "destination_pin", destinationPinBounds, 80);
             if (destinationPin > 0.9f)
             {
               currentDestinationState = UnloadCargoStateFlag.DestinationMenu;
               lastClick = parent.GetClickPoint(destinationPinBounds);
               Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+              nextDelay = 2000;
               return this;
             }
             else
@@ -102,13 +111,22 @@ namespace EveAutoRat.Classes
         } 
         else if (currentDestinationState == UnloadCargoStateFlag.DestinationFlying)
         {
-          Rectangle found = FindWord("Undock", undockBounds);
-          if (found.X > -1)
+          if (parent.InsideState == InsideFlag.Inside)
           {
             currentDestinationState = UnloadCargoStateFlag.DestinationSelectShip;
             lastClick = parent.GetClickPoint(PixelStateCargo.cargoHoldBounds);
-            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y - 15);
             return this;
+          }
+          else
+          {
+            if (FindSingleWord(bmp128, confirmBounds) == "Confirm")
+            {
+              lastClick = parent.GetClickPoint(confirmBounds);
+              Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+              nextDelay = 10000;
+              return this;
+            }
           }
         }
         else if (currentDestinationState == UnloadCargoStateFlag.DestinationSelectShip)

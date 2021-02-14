@@ -60,7 +60,7 @@ namespace EveAutoRat.Classes
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
         return this;
       }
-      if (FindSingleWord(bmp128, encounterBeginBounds) == "Begin")
+      if (FindSingleWord(bmp128, encounterBeginBounds).EndsWith("Begin"))
       {
         lastClick = parent.GetClickPoint(encounterBeginBounds);
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
