@@ -30,7 +30,7 @@ namespace EveAutoRat.Classes
       Bitmap bmp96 = threshHoldDictionary[96];
       Bitmap bmp128 = threshHoldDictionary[128];
 
-      if (parent.CurrentHoldAmount > 0.90 || (parent.InsideState == InsideFlag.Inside && parent.CurrentHoldAmount > 0.10) || currentDestinationState != UnloadCargoStateFlag.Unknown)
+      if (parent.CurrentHoldAmount > 0.85 || (parent.InsideState == InsideFlag.Inside && parent.CurrentHoldAmount > 0.10) || currentDestinationState != UnloadCargoStateFlag.Unknown)
       {
         if (currentDestinationState == UnloadCargoStateFlag.Unknown)
         {
@@ -50,10 +50,14 @@ namespace EveAutoRat.Classes
               string stationName = FindSingleWord(bmp64, stationNameBounds);
               string jumpToName = FindSingleWord(bmp64, jumpToBounds);
               int n = GetStringSimilarity(stationName, jumpToName);
-              if (n < 2)
+              if (n < 2 && parent.CurrentHoldAmount > 0.75)
               {
                 currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
                 return this;
+              } 
+              else
+              {
+                return NextState;
               }
             }
             float destinationPin = FindIconSimilarity(bmp80, "destination_pin", destinationPinBounds, 80);

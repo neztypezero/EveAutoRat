@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 namespace EveAutoRat.Classes
@@ -22,7 +23,7 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
-      Rectangle[] enemyBoundsList = GetEnemyBounds();
+      List<Rectangle> enemyBoundsList = GetEnemyBounds();
       Bitmap bmp64 = parent.threshHoldDictionary[64];
       Bitmap bmp128 = parent.threshHoldDictionary[128];
 
@@ -82,7 +83,7 @@ namespace EveAutoRat.Classes
         }
       }
 
-      if (enemyBoundsList != null && enemyBoundsList.Length > 0)
+      if (enemyBoundsList != null && enemyBoundsList.Count > 0)
       {
         if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
         {

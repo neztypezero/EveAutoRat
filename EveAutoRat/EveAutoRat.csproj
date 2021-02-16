@@ -265,6 +265,9 @@
     <Content Include="PixelObjects\80\icon_destination_pin_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="PixelObjects\80\icon_dialog_arrow_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="PixelObjects\96\icon_destination_auto_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -21,7 +21,7 @@ namespace EveAutoRat.Classes
       this.nextDelay = delay;
     }
 
-    public Rectangle[] GetEnemyBounds()
+    public List<Rectangle> GetEnemyBounds()
     {
       Bitmap screenBmp = threshHoldDictionary[0];
       Bitmap iconColumnEnemies = screenBmp.Clone(battleIconBounds, PixelFormat.Format24bppRgb);
@@ -31,21 +31,39 @@ namespace EveAutoRat.Classes
 
       objectCounter.ProcessImage(iconColumnEnemies);
       iconColumnEnemies.Dispose();
-      Rectangle[] rList = objectCounter.GetObjectsRectangles();
+      Rectangle[] rArray = objectCounter.GetObjectsRectangles();
+
+      List<Rectangle> rList = new List<Rectangle>();
+      foreach (Rectangle r in rArray)
+      {
+        if (r.Height < 3)
+        {
+          int n = rList.Count;
+          if (n > 0)
+          {
+            rList[n - 1].Intersect(r);
+          }
+        } 
+        else if (r.Height > 9)
+        {
+          rList.Add(r);
+        }
+      }
 
       return rList;
     }
 
-    public Rectangle GetSmallestEnemyBounds(Rectangle[] enemyList)
+    public List<Rectangle> GetSmallEnemyBoundList(List<Rectangle> enemyList)
     {
+      List<Rectangle> rList = new List<Rectangle>();
       foreach (Rectangle r in enemyList)
       {
         if (r.Height > 9 && r.Height < 13)
         {
-          return r;
+          rList.Add(r);
         }
       }
-      return enemyList[0];
+      return rList;
     }
 
     public int GetTargetEnemyCount()

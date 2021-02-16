@@ -112,7 +112,7 @@ namespace EveAutoRat.Classes
       }
       if (currentState != newState)
       {
-        changeTime = time + 900;
+        changeTime = time + 400;
         currentState = newState;
       }
       if (time > changeTime)

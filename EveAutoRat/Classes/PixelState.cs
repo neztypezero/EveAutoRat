@@ -9,6 +9,8 @@ namespace EveAutoRat.Classes
 {
   public class PixelState
   {
+    protected static Rectangle startEveEchoesBounds = new Rectangle(838, 866, 226, 35);
+
     protected static Point encounterOpenDialogPoint = new Point(150, 100);
     protected static Rectangle encounterTileBounds = new Rectangle(333, 766, 71, 56);
     protected static Rectangle encounterNewsBounds = new Rectangle(64, 419, 52, 32);
@@ -55,6 +57,7 @@ namespace EveAutoRat.Classes
     protected static Rectangle stationNameBounds = new Rectangle(1590, 260, 320, 36);
     protected static Rectangle jumpToBounds = new Rectangle(55, 470, 280, 36);
     protected static Rectangle noSearchResultsBounds = new Rectangle(1580, 625, 300, 60);
+    protected static Rectangle topEnemyBounds = new Rectangle(800, 50, 750, 160);
 
     protected static Rectangle[] weaponBoundsList = new Rectangle[] {
       new Rectangle(1202, 859, 110, 110),
