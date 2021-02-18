@@ -71,10 +71,21 @@ namespace EveAutoRat.Classes
       Bitmap bmp112 = threshHoldDictionary[112];
       using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
-        Rectangle r = new Rectangle(0,0,iconColumnEnemies.Width,iconColumnEnemies.Height);
+        Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
         return FindIconSimilarityCount(iconColumnEnemies, "enemy_targeted", r, 112, 0.9f);
       }
     }
+
+    public List<Rectangle> GetTargetEnemyList()
+    {
+      Bitmap bmp112 = threshHoldDictionary[112];
+      using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
+      {
+        Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
+        return FindIconSimilarityList(iconColumnEnemies, "enemy_targeted", r, 112, 0.9f);
+      }
+    }
+       
 
     public WeaponState GetWeapon()
     {

@@ -13,6 +13,7 @@ namespace EveAutoRat.Classes
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
     private double smallClickTime = 0;
+    private double wordSearchTime = 0;
 
     private int looting = 0;
 
@@ -76,18 +77,17 @@ namespace EveAutoRat.Classes
       Bitmap bmp128 = threshHoldDictionary[128];
 
       List<Rectangle> enemyBoundsList = GetEnemyBounds();
-
-      int enemyTargetedCount = GetTargetEnemyCount();
+      List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
+      List<Rectangle> enemyTargetedList = GetTargetEnemyList();
 
       WeaponState pulseLaser = GetWeapon();
-      if (enemyTargetedCount == 0)
+      if (enemyTargetedList.Count == 0)
       {
         targetAllTime = totalTime + 5000;
       }
-      if ((enemyTargetedCount == 0 || pulseLaser.CurrentState == WeaponStateFlag.InActive) && enemyBoundsList.Count > 0 && totalTime > pulseLaser.clickTime)
+      if ((enemyTargetedList.Count == 0 || pulseLaser.CurrentState == WeaponStateFlag.InActive) && enemyBoundsList.Count > 0 && totalTime > pulseLaser.clickTime)
       {
         Rectangle er;
-        List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
         if (smallEnemies.Count > 0)
         {
           er = smallEnemies[0];
@@ -102,14 +102,44 @@ namespace EveAutoRat.Classes
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
 
         wordSearch = "Focus";
+        wordSearchTime = totalTime + 5000;
         searchBounds = popupBounds;
         nextDelay = 1500;
         pulseLaser.clickTime = totalTime + 10000;
         targetAllTime = totalTime + 5000;
       }
+      else if  (pulseLaser.CurrentState == WeaponStateFlag.Active && smallEnemies.Count > 1 && wordSearch == null)
+      {
+        foreach (Rectangle sr in smallEnemies)
+        {
+          bool isTargeted = false;
+          foreach (Rectangle r in enemyTargetedList)
+          {
+            if (sr.IntersectsWith(r))
+            {
+              isTargeted = true;
+              break;
+            }
+          }
+          if (!isTargeted)
+          {
+            Rectangle er = sr;
+            er.X += battleIconBounds.X;
+            er.Y += battleIconBounds.Y;
+            lastClick = parent.GetClickPoint(er);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
 
+            wordSearch = "Lock";
+            wordSearchTime = totalTime + 5000;
+            searchBounds = popupBounds;
+            nextDelay = 1500;
 
-      if (totalTime > targetAllTime)
+            return this;
+          }
+        }
+      }
+
+      if (totalTime > targetAllTime && smallEnemies.Count <= 1)
       {
         if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
         {
@@ -141,6 +171,11 @@ namespace EveAutoRat.Classes
           {
             looting = 0;
             lootingTime = 0;
+            wordSearch = null;
+            searchBounds = NullRect;
+          }
+          else if (totalTime > wordSearchTime)
+          {
             wordSearch = null;
             searchBounds = NullRect;
           }

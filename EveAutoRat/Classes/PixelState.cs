@@ -297,6 +297,26 @@ namespace EveAutoRat.Classes
       return 0;
     }
 
+    public List<Rectangle> FindIconSimilarityList(Bitmap src, string iconName, Rectangle bounds, int threshHold, float similarity)
+    {
+      List<Rectangle> rList = new List<Rectangle>();
+      List<float> valueList = new List<float>();
+      Dictionary<string, PixelObject> poDict = PixelObjectList.GetPixelObjectDictionary(threshHold);
+      if (poDict.ContainsKey(iconName))
+      {
+        using (Bitmap bmp = src.Clone(bounds, PixelFormat.Format24bppRgb))
+        {
+          ExhaustiveTemplateMatching tm = new ExhaustiveTemplateMatching(similarity);
+          TemplateMatch[] matchings = tm.ProcessImage(bmp, poDict[iconName].bmp);
+          foreach (TemplateMatch match in matchings)
+          {
+            rList.Add(match.Rectangle);
+          }
+        }
+      }
+      return rList;
+    }
+
     public int GetStringSimilarity(string s, string t)
     {
       if (string.IsNullOrEmpty(s))
