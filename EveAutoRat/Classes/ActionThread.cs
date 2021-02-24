@@ -16,9 +16,10 @@ namespace EveAutoRat.Classes
     protected IntPtr eventHWnd = IntPtr.Zero;
     protected Grayscale grayScaleFilter = new Grayscale(0.2125, 0.7154, 0.0721);
     public int[] threshHoldList = new int[] { 64, 80, 96, 112, 128 };
-    public Dictionary<int, Bitmap> threshHoldDictionary = new Dictionary<int, Bitmap>();
+    protected Dictionary<int, Bitmap> threshHoldDictionary = new Dictionary<int, Bitmap>();
     protected Bitmap currentFrame = null;
     public bool running = false;
+    private object runOnceLock = new object();
 
     protected Point zp = new Point(0, 0);
 
@@ -30,11 +31,23 @@ namespace EveAutoRat.Classes
       this.eventHWnd = eventHWnd;
     }
 
+    public Bitmap GetThreshHoldBitmap(int threshHold)
+    {
+      if (threshHoldDictionary != null)
+      {
+        if (threshHoldDictionary.ContainsKey(threshHold))
+        {
+          return threshHoldDictionary[threshHold];
+        }
+      }
+      return null;
+    }
+
     public Point GetClickPoint(Rectangle bounds)
     {
       Point center = bounds.Location;
       center.X += bounds.Width / 2;
-      center.Y += (bounds.Height / 2); // 52 is the Title + Menu height
+      center.Y += (bounds.Height / 2);
       return center;
     }
 
@@ -77,6 +90,10 @@ namespace EveAutoRat.Classes
 
               if (loopOnceThread == null || !loopOnceThread.IsAlive)
               {
+                if (paramList.time == 0)
+                {
+                  paramList.time = currentTime;
+                }
                 if ((currentTime - paramList.time) >= paramList.nextCallDelay)
                 {
                   paramList.time = currentTime;
@@ -90,21 +107,18 @@ namespace EveAutoRat.Classes
               {
                 parentForm.Invoke(new Action(() =>
                 {
-                  lock(parentForm)
+                  if (!parentForm.IsDisposed && running)
                   {
-                    if (!parentForm.IsDisposed)
-                    {
-                      parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
-                    }
+                    parentForm.BackgroundImage = screenBmp.Clone(new Rectangle(0, 28, screenBmp.Width, screenBmp.Height - 28), PixelFormat.Format24bppRgb);
                   }
                 }));
               }
             }
           }
         }
-        foreach(int index in threshHoldList)
+        foreach (int index in threshHoldList)
         {
-          threshHoldDictionary[index].Save("ObjBitmap\\"+index+".bmp");
+          threshHoldDictionary[index].Save("ObjBitmap\\" + index + ".bmp");
         }
       }
     }
@@ -118,20 +132,23 @@ namespace EveAutoRat.Classes
 
     protected virtual void RunOnce(object p)
     {
-      ActionThreadParameterList paramList = (ActionThreadParameterList)p;
-      Bitmap screenBitmap = paramList.screenBitmap;
-      Rectangle r = new Rectangle(0, 0, screenBitmap.Width, screenBitmap.Height);
-
-      currentFrame = grayScaleFilter.Apply(screenBitmap);
-      threshHoldDictionary[0] = screenBitmap;
-      threshHoldDictionary[1] = currentFrame;
-      for (int i = 0; i < threshHoldList.Length; i++)
+      lock(runOnceLock)
       {
-        Threshold thFilter = new Threshold(threshHoldList[i]);
-        Bitmap b = thFilter.Apply(currentFrame);
-        threshHoldDictionary[threshHoldList[i]] = b.Clone(r, PixelFormat.Format24bppRgb);
+        ActionThreadParameterList paramList = (ActionThreadParameterList)p;
+        Bitmap screenBmp = paramList.screenBitmap;
+        Rectangle r = new Rectangle(0, 0, screenBmp.Width, screenBmp.Height);
+
+        currentFrame = grayScaleFilter.Apply(screenBmp);
+        threshHoldDictionary[0] = screenBmp;
+        threshHoldDictionary[1] = currentFrame;
+        for (int i = 0; i < threshHoldList.Length; i++)
+        {
+          Threshold thFilter = new Threshold(threshHoldList[i]);
+          threshHoldDictionary[threshHoldList[i]] = thFilter.Apply(currentFrame);
+        }
+        paramList.nextCallDelay = Step(paramList.time);
+        paramList.time = 0;
       }
-      paramList.nextCallDelay = Step(paramList.time);
     }
 
     public Dictionary<Rectangle, List<Rectangle>> GetBoundsDictionaryList(Rectangle[] rectArray)

@@ -24,11 +24,11 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
-      Bitmap bmp0 = threshHoldDictionary[0];
-      Bitmap bmp64 = threshHoldDictionary[64];
-      Bitmap bmp80 = threshHoldDictionary[80];
-      Bitmap bmp96 = threshHoldDictionary[96];
-      Bitmap bmp128 = threshHoldDictionary[128];
+      Bitmap bmp0 = parent.GetThreshHoldBitmap(0);
+      Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
+      Bitmap bmp80 = parent.GetThreshHoldBitmap(80);
+      Bitmap bmp96 = parent.GetThreshHoldBitmap(96);
+      Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
       if (parent.CurrentHoldAmount > 0.85 || (parent.InsideState == InsideFlag.Inside && parent.CurrentHoldAmount > 0.10) || currentDestinationState != UnloadCargoStateFlag.Unknown)
       {
@@ -50,12 +50,12 @@ namespace EveAutoRat.Classes
               string stationName = FindSingleWord(bmp64, stationNameBounds);
               string jumpToName = FindSingleWord(bmp64, jumpToBounds);
               int n = GetStringSimilarity(stationName, jumpToName);
-              if (n < 2 && parent.CurrentHoldAmount > 0.75)
+              if (n < 2)
               {
                 currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
                 return this;
               } 
-              else
+              else if (parent.CurrentHoldAmount < 0.60)
               {
                 return NextState;
               }
@@ -176,7 +176,7 @@ namespace EveAutoRat.Classes
           }
         }
       }
-      else
+      else if (parent.InsideState != InsideFlag.Unknown)
       {
         return NextState;
       }

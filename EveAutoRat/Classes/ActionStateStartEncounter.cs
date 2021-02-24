@@ -13,8 +13,8 @@ namespace EveAutoRat.Classes
     public override ActionState Run(double totalTime)
     {
       Rectangle found;
-      Bitmap bmp0 = threshHoldDictionary[0];
-      Bitmap bmp128 = threshHoldDictionary[128];
+      Bitmap bmp0 = parent.GetThreshHoldBitmap(0);
+      Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
       float encounterTile = FindIconSimilarity(bmp0, "encounter_tile", encounterTileBounds, 0);
       if (encounterTile > 0.94f)

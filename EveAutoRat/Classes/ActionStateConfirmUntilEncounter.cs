@@ -23,9 +23,9 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
+      Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
+      Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
       List<Rectangle> enemyBoundsList = GetEnemyBounds();
-      Bitmap bmp64 = parent.threshHoldDictionary[64];
-      Bitmap bmp128 = parent.threshHoldDictionary[128];
 
       if (wordSearch != null)
       {
@@ -41,7 +41,7 @@ namespace EveAutoRat.Classes
         }
       }
 
-      string confirmText = FindSingleWord(threshHoldDictionary[128], confirmBounds);
+      string confirmText = FindSingleWord(parent.GetThreshHoldBitmap(128), confirmBounds);
       if (confirmText == "Confirm")
       {
         lastClick = parent.GetClickPoint(confirmBounds);

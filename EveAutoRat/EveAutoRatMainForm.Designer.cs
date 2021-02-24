@@ -35,10 +35,10 @@
       this.characters20x32ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.characters32x32ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.characters64x64ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.wordsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.actionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.startMiningToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.startNewsRATToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.wordsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.menuStrip1.SuspendLayout();
       this.SuspendLayout();
       // 
@@ -46,9 +46,9 @@
       // 
       this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
       this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-      this.fileToolStripMenuItem,
-      this.learnToolStripMenuItem,
-      this.actionToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.learnToolStripMenuItem,
+            this.actionToolStripMenuItem});
       this.menuStrip1.Location = new System.Drawing.Point(0, 0);
       this.menuStrip1.Name = "menuStrip1";
       this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 1, 0, 1);
@@ -59,7 +59,7 @@
       // fileToolStripMenuItem
       // 
       this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-      this.exitToolStripMenuItem});
+            this.exitToolStripMenuItem});
       this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
       this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
       this.fileToolStripMenuItem.Text = "File";
@@ -74,10 +74,10 @@
       // learnToolStripMenuItem
       // 
       this.learnToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-      this.characters20x32ToolStripMenuItem,
-      this.characters32x32ToolStripMenuItem,
-      this.characters64x64ToolStripMenuItem,
-      this.wordsToolStripMenuItem});
+            this.characters20x32ToolStripMenuItem,
+            this.characters32x32ToolStripMenuItem,
+            this.characters64x64ToolStripMenuItem,
+            this.wordsToolStripMenuItem});
       this.learnToolStripMenuItem.Name = "learnToolStripMenuItem";
       this.learnToolStripMenuItem.Size = new System.Drawing.Size(48, 22);
       this.learnToolStripMenuItem.Text = "Learn";
@@ -85,29 +85,36 @@
       // characters20x32ToolStripMenuItem
       // 
       this.characters20x32ToolStripMenuItem.Name = "characters20x32ToolStripMenuItem";
-      this.characters20x32ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+      this.characters20x32ToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
       this.characters20x32ToolStripMenuItem.Text = "Characters 20x32";
       this.characters20x32ToolStripMenuItem.Click += new System.EventHandler(this.characters20x32ToolStripMenuItem_Click);
       // 
       // characters32x32ToolStripMenuItem
       // 
       this.characters32x32ToolStripMenuItem.Name = "characters32x32ToolStripMenuItem";
-      this.characters32x32ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+      this.characters32x32ToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
       this.characters32x32ToolStripMenuItem.Text = "Characters 32x32";
       this.characters32x32ToolStripMenuItem.Click += new System.EventHandler(this.characters32x32ToolStripMenuItem_Click);
       // 
       // characters64x64ToolStripMenuItem
       // 
       this.characters64x64ToolStripMenuItem.Name = "characters64x64ToolStripMenuItem";
-      this.characters64x64ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+      this.characters64x64ToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
       this.characters64x64ToolStripMenuItem.Text = "Characters 64x64";
       this.characters64x64ToolStripMenuItem.Click += new System.EventHandler(this.characters64x64ToolStripMenuItem_Click);
+      // 
+      // wordsToolStripMenuItem
+      // 
+      this.wordsToolStripMenuItem.Name = "wordsToolStripMenuItem";
+      this.wordsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+      this.wordsToolStripMenuItem.Text = "Words";
+      this.wordsToolStripMenuItem.Click += new System.EventHandler(this.wordsToolStripMenuItem_Click);
       // 
       // actionToolStripMenuItem
       // 
       this.actionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-      this.startMiningToolStripMenuItem,
-      this.startNewsRATToolStripMenuItem});
+            this.startMiningToolStripMenuItem,
+            this.startNewsRATToolStripMenuItem});
       this.actionToolStripMenuItem.Name = "actionToolStripMenuItem";
       this.actionToolStripMenuItem.Size = new System.Drawing.Size(54, 22);
       this.actionToolStripMenuItem.Text = "Action";
@@ -128,13 +135,6 @@
       this.startNewsRATToolStripMenuItem.Text = "Start News RAT";
       this.startNewsRATToolStripMenuItem.Click += new System.EventHandler(this.startNewsRATToolStripMenuItem_Click);
       // 
-      // wordsToolStripMenuItem
-      // 
-      this.wordsToolStripMenuItem.Name = "wordsToolStripMenuItem";
-      this.wordsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-      this.wordsToolStripMenuItem.Text = "Words";
-      this.wordsToolStripMenuItem.Click += new System.EventHandler(this.wordsToolStripMenuItem_Click);
-      // 
       // EveAutoRatMainForm
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -148,6 +148,7 @@
       this.Margin = new System.Windows.Forms.Padding(2);
       this.Name = "EveAutoRatMainForm";
       this.Text = "EveAutoRat";
+      this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EveAutoRatMainForm_FormClosing);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.EveAutoRatMainForm_Paint);
       this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.EveAutoRatMainForm_MouseDown);
       this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.EveAutoRatMainForm_MouseMove);

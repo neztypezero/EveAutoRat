@@ -11,7 +11,7 @@ namespace EveAutoRat.Classes
     private Rectangle NullBounds = new Rectangle(0, 0, -1, -1);
     private Rectangle wordSearchBounds;
     private int looting = 0;
-    private double lootingTime = 0;
+    private double lootingTimeout = 0;
     private bool menuPressed = false;
 
     public ActionStateLoot(ActionThreadNewsRAT parent, double delay) : base(parent, delay)
@@ -20,16 +20,17 @@ namespace EveAutoRat.Classes
 
     public Rectangle GetFirstLootBounds()
     {
-      using (Bitmap iconColumnLoot = threshHoldDictionary[64].Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
+      using (Bitmap iconColumnLoot = parent.GetThreshHoldBitmap(112).Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
         objectCounter.ProcessImage(iconColumnLoot);
+        iconColumnLoot.Save("ObjBitmap\\loot.bmp");
       }
       Rectangle[] lootRectList = objectCounter.GetObjectsRectangles();
       foreach (Rectangle r in lootRectList)
       {
-        if (r.Width > 12)
+        if (r.Width > 7 && r.Height > 7)
         {
-          return new Rectangle(r.X + firstBattleIconBounds.X, r.Y + firstBattleIconBounds.Y, r.Width, r.Height);
+          return new Rectangle(r.X + battleIconBounds.X, r.Y + battleIconBounds.Y, r.Width, r.Height);
         }
       }
       return NullRect;
@@ -41,12 +42,12 @@ namespace EveAutoRat.Classes
       wordSearch = null;
       wordSearchBounds = NullBounds;
       menuPressed = false;
-      lootingTime = 0;
+      lootingTimeout = 0;
     }
 
     public override ActionState Run(double totalTime)
     {
-      Bitmap bmp64 = threshHoldDictionary[64];
+      Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
 
       if (wordSearch != null)
       {
@@ -55,7 +56,7 @@ namespace EveAutoRat.Classes
         {
           if (looting == 1)
           {
-            lootingTime = totalTime + 25000;
+            lootingTimeout = totalTime + 25000;
             looting = 2;
             wordSearch = "Loot";
             wordSearchBounds = lootAllBounds;
@@ -65,8 +66,8 @@ namespace EveAutoRat.Classes
             looting = 0;
             wordSearch = null;
             wordSearchBounds = NullBounds;
-            nextDelay = 3000;
-            Thread.Sleep(500);
+            Thread.Sleep(250);
+            nextDelay = 2000;
           }
           else
           {
@@ -80,7 +81,7 @@ namespace EveAutoRat.Classes
         }
         if (wordSearch == "Loot")
         {
-          if (looting != 0 && totalTime > lootingTime)
+          if (looting != 0 && totalTime > lootingTimeout)
           {
             looting = 0;
             wordSearch = null;
@@ -117,7 +118,7 @@ namespace EveAutoRat.Classes
           wordSearch = "Loot";
           wordSearchBounds = popupBounds;
           looting = 1;
-          lootingTime = totalTime + 2500;
+          lootingTimeout = totalTime + 2500;
           return this;
         }
         else

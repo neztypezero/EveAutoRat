@@ -9,7 +9,10 @@ namespace EveAutoRat.Classes
 {
   public class PixelState
   {
-    protected static Rectangle startEveEchoesBounds = new Rectangle(838, 866, 226, 35);
+    protected static Rectangle eveEchoesIconBounds = new Rectangle(685, 235, 72, 72);
+    protected static Rectangle startEveEchoesBounds = new Rectangle(848, 872, 226, 34);
+    protected static Rectangle gameAnnouncementBounds = new Rectangle(1697, 162, 28, 30);
+    protected static Rectangle playerNameBounds = new Rectangle(250, 160, 300, 45);
 
     protected static Point encounterOpenDialogPoint = new Point(150, 100);
     protected static Rectangle encounterTileBounds = new Rectangle(333, 766, 71, 56);
@@ -78,7 +81,6 @@ namespace EveAutoRat.Classes
     protected Rectangle NullRect = new Rectangle(-1, -1, 0, 0);
 
     protected AForge.Imaging.BlobCounter objectCounter = new AForge.Imaging.BlobCounter();
-    protected Dictionary<int, Bitmap> threshHoldDictionary;
     protected System.IntPtr eventHWnd;
 
     protected static Grayscale battleIconGrayFilter = new Grayscale(1.0, 0.0, 0.0);
@@ -90,7 +92,6 @@ namespace EveAutoRat.Classes
     {
       this.parent = parent;
       this.eventHWnd = parent.GetEventHWnd();
-      this.threshHoldDictionary = parent.threshHoldDictionary;
     }
 
     public virtual void StepEvery(Bitmap screenBmp, double totalTime)
@@ -132,7 +133,7 @@ namespace EveAutoRat.Classes
     {
       foreach (int threshhold in parent.threshHoldList)
       {
-        Bitmap bmpTh = threshHoldDictionary[threshhold];
+        Bitmap bmpTh = parent.GetThreshHoldBitmap(threshhold);
         using (Bitmap bmp = bmpTh.Clone(searchBounds, bmpTh.PixelFormat))
         {
           objectCounter.ProcessImage(bmp);
@@ -167,7 +168,7 @@ namespace EveAutoRat.Classes
       Rectangle resultRectangle = NullRect;
 
       //Not Selected
-      using (Bitmap bmp = parent.threshHoldDictionary[0].Clone(searchBounds, PixelFormat.Format24bppRgb))
+      using (Bitmap bmp = parent.GetThreshHoldBitmap(0).Clone(searchBounds, PixelFormat.Format24bppRgb))
       {
         Grayscale grayFilter = new Grayscale(0.5, 0.5, 0.5);
         Threshold thFilter = new Threshold(128);
@@ -176,19 +177,16 @@ namespace EveAutoRat.Classes
         invertFilter.ApplyInPlace(gbmp);
         string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim();
         Double.TryParse(foundWord, out lastResult);
-      }
-      if (Double.IsNaN(lastResult))
-      {
-        using (Bitmap bmp = parent.threshHoldDictionary[0].Clone(searchBounds, PixelFormat.Format24bppRgb))
+        if (Double.IsNaN(lastResult))
         {
           ColorFiltering whiteFilter = new ColorFiltering(new AForge.IntRange(100, 255), new AForge.IntRange(100, 255), new AForge.IntRange(100, 255));
-          Grayscale grayFilter = new Grayscale(0.25, 0.25, 0.25);
-          Threshold thFilter = new Threshold(64);
-          Bitmap gbmp = whiteFilter.Apply(bmp);
+          grayFilter = new Grayscale(0.25, 0.25, 0.25);
+          thFilter = new Threshold(64);
+          gbmp = whiteFilter.Apply(bmp);
           gbmp = grayFilter.Apply(gbmp);
           thFilter.ApplyInPlace(gbmp);
           invertFilter.ApplyInPlace(gbmp);
-          string foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim();
+          foundWord = OCR.GetNumber(gbmp, new Rectangle(0, 0, gbmp.Width, gbmp.Height)).Trim();
           Double.TryParse(foundWord, out lastResult);
         }
       }
@@ -198,8 +196,9 @@ namespace EveAutoRat.Classes
     public Rectangle FindDouble(ref double value, Rectangle searchBounds)
     {
       Dictionary<double, List<Rectangle>> valueCounter = new Dictionary<double, List<Rectangle>>();
-      foreach (Bitmap thbmp in threshHoldDictionary.Values)
+      foreach (int i in parent.threshHoldList)
       {
+        Bitmap thbmp = parent.GetThreshHoldBitmap(i);
         using (Bitmap bmp = thbmp.Clone(searchBounds, PixelFormat.Format24bppRgb))
         {
           objectCounter.ProcessImage(bmp);
@@ -257,10 +256,15 @@ namespace EveAutoRat.Classes
 
     public Rectangle FindIcon(Rectangle searchBounds, string iconName, int threshHold)
     {
-      using (Bitmap bmp = parent.threshHoldDictionary[threshHold].Clone(searchBounds, PixelFormat.Format24bppRgb))
+      Bitmap tbmp = parent.GetThreshHoldBitmap(threshHold);
+      if (tbmp != null)
       {
-        return PixelObjectList.FindBitmap(bmp, iconName, threshHold);
+        using (Bitmap bmp = tbmp.Clone(searchBounds, PixelFormat.Format24bppRgb))
+        {
+          return PixelObjectList.FindBitmap(bmp, iconName, threshHold);
+        }
       }
+      return new Rectangle(-1, -1, 0, 0);
     }
 
     public float FindIconSimilarity(Bitmap src, string iconName, Rectangle bounds, int threshHold)

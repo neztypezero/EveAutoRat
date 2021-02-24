@@ -54,7 +54,7 @@ namespace EveAutoRat.Classes
         foreach (Rectangle rc in keys)
         {
           currentWeaponsBounds[rc]++;
-          if (currentWeaponsBounds[rc] > 5)
+          if (currentWeaponsBounds[rc] > 10)
           {
             currentWeaponsBounds.Remove(rc);
           }

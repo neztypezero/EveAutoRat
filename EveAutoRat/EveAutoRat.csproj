@@ -92,6 +92,7 @@
     <Compile Include="Classes\ActionStateLoot.cs" />
     <Compile Include="Classes\ActionStateNOP.cs" />
     <Compile Include="Classes\ActionStateStartEncounter.cs" />
+    <Compile Include="Classes\ActionStateStartUp.cs" />
     <Compile Include="Classes\ActionStateUnloadCargo.cs" />
     <Compile Include="Classes\ActionThread.cs" />
     <Compile Include="Classes\ActionThreadLearn.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Classes\OCR.cs" />
     <Compile Include="Classes\PixelState.cs" />
     <Compile Include="Classes\PixelStateEnemies.cs" />
+    <Compile Include="Classes\PixelStateEveEchoes.cs" />
     <Compile Include="Classes\PixelStateInStation.cs" />
     <Compile Include="Classes\PixelStateWeapons.cs" />
     <Compile Include="Classes\WeaponState.cs" />
@@ -184,6 +186,15 @@
     <Content Include="PixelObjects\0\icon_encounter_tile_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="PixelObjects\0\icon_eve_app_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_eve_app_overlayed_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\0\icon_eve_start_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="PixelObjects\0\icon_eye_closed_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -233,6 +244,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\128\icon_dialog_arrow_001.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PixelObjects\128\icon_eve_start_001.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PixelObjects\128\icon_eye_001.bmp">

@@ -8,14 +8,16 @@ namespace EveAutoRat.Classes
 {
   public class ActionStateBattle : ActionState
   {
-    private double lootingTime = 0;
     private double targetAllTime = 0;
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
+    private double smallSeeTime = 0;
     private double smallClickTime = 0;
-    private double wordSearchTime = 0;
+    private double searchWordTimeout = 0;
+    private double currentTotalTime = 0;
 
-    private int looting = 0;
+    private Font infoFont = new Font("Arial", 12);
+    private Rectangle infoBounds = new Rectangle(10, 300, 320, 500);
 
     private string wordSearch = null;
     private Rectangle searchBounds = new Rectangle(0, 0, 0, 0);
@@ -28,10 +30,34 @@ namespace EveAutoRat.Classes
     {
       battleOverWaitTime = 0;
       battleOver = false;
-      looting = 0;
-      lootingTime = 0;
       wordSearch = null;
-      searchBounds = NullRect;
+      searchBounds = NullRect; 
+      smallSeeTime = 0;
+      smallClickTime = 0;
+    }
+
+    public override void Draw(Graphics g)
+    {
+      base.Draw(g);
+      Brush stateBg = new SolidBrush(Color.FromArgb(150, 0, 0, 0));
+      Brush textColor = new SolidBrush(Color.FromArgb(255, 255, 255, 255));
+      g.FillRectangle(stateBg, infoBounds);
+      Point textPoint = new Point(infoBounds.X+20, infoBounds.Y+20);
+      g.DrawString("" + currentTotalTime, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + targetAllTime, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + battleOver, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + smallSeeTime, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + smallClickTime, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + wordSearch, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + searchBounds, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("" + searchWordTimeout, infoFont, textColor, textPoint);
     }
 
     public override int GetThreshHold()
@@ -41,7 +67,7 @@ namespace EveAutoRat.Classes
 
     public bool GetFirstActivatedTarget()
     {
-      using (Bitmap iconColumnLoot = threshHoldDictionary[64].Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
+      using (Bitmap iconColumnLoot = parent.GetThreshHoldBitmap(64).Clone(firstBattleIconBounds, PixelFormat.Format24bppRgb))
       {
         objectCounter.ProcessImage(iconColumnLoot);
       }
@@ -72,74 +98,28 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
-      Bitmap screenBmp = threshHoldDictionary[0];
-      Bitmap bmp64 = threshHoldDictionary[64];
-      Bitmap bmp128 = threshHoldDictionary[128];
+      Bitmap screenBmp = parent.GetThreshHoldBitmap(0);
+      Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
+      Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
       List<Rectangle> enemyBoundsList = GetEnemyBounds();
       List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
       List<Rectangle> enemyTargetedList = GetTargetEnemyList();
 
+      currentTotalTime = totalTime;
+
       WeaponState pulseLaser = GetWeapon();
-      if (enemyTargetedList.Count == 0)
+      if (enemyBoundsList.Count == 0 || (enemyTargetedList.Count == 0 && smallEnemies.Count > 0))
       {
         targetAllTime = totalTime + 5000;
       }
-      if ((enemyTargetedList.Count == 0 || pulseLaser.CurrentState == WeaponStateFlag.InActive) && enemyBoundsList.Count > 0 && totalTime > pulseLaser.clickTime)
+
+      if (enemyBoundsList.Count < 2)
       {
-        Rectangle er;
-        if (smallEnemies.Count > 0)
-        {
-          er = smallEnemies[0];
-        }
-        else
-        {
-          er = enemyBoundsList[0];
-        }
-        er.X += battleIconBounds.X;
-        er.Y += battleIconBounds.Y;
-        lastClick = parent.GetClickPoint(er);
-        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-
-        wordSearch = "Focus";
-        wordSearchTime = totalTime + 5000;
-        searchBounds = popupBounds;
-        nextDelay = 1500;
-        pulseLaser.clickTime = totalTime + 10000;
-        targetAllTime = totalTime + 5000;
-      }
-      else if  (pulseLaser.CurrentState == WeaponStateFlag.Active && smallEnemies.Count > 1 && wordSearch == null)
-      {
-        foreach (Rectangle sr in smallEnemies)
-        {
-          bool isTargeted = false;
-          foreach (Rectangle r in enemyTargetedList)
-          {
-            if (sr.IntersectsWith(r))
-            {
-              isTargeted = true;
-              break;
-            }
-          }
-          if (!isTargeted)
-          {
-            Rectangle er = sr;
-            er.X += battleIconBounds.X;
-            er.Y += battleIconBounds.Y;
-            lastClick = parent.GetClickPoint(er);
-            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-
-            wordSearch = "Lock";
-            wordSearchTime = totalTime + 5000;
-            searchBounds = popupBounds;
-            nextDelay = 1500;
-
-            return this;
-          }
-        }
+        smallSeeTime = 0;
       }
 
-      if (totalTime > targetAllTime && smallEnemies.Count <= 1)
+      if (totalTime > targetAllTime && (smallEnemies.Count == 0 || (smallEnemies.Count == 1 && enemyTargetedList.Count > 0)))
       {
         if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
         {
@@ -148,6 +128,12 @@ namespace EveAutoRat.Classes
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           return this;
         }
+      }
+      if ((wordSearch == "Lock" && enemyTargetedList.Count == 0) || (wordSearch == "Focus" && enemyBoundsList.Count == 0) || (searchWordTimeout != 0 && totalTime > searchWordTimeout))
+      {
+        wordSearch = null;
+        searchBounds = NullRect;
+        searchWordTimeout = 0;
       }
       if (wordSearch != null)
       {
@@ -159,30 +145,7 @@ namespace EveAutoRat.Classes
           wordSearch = null;
           searchBounds = NullRect;
           nextDelay = 2000;
-          if (looting == 2)
-          {
-            looting = 0;
-          }
           return this;
-        }
-        else
-        {
-          if (looting > 0 && totalTime > lootingTime)
-          {
-            looting = 0;
-            lootingTime = 0;
-            wordSearch = null;
-            searchBounds = NullRect;
-          }
-          else if (totalTime > wordSearchTime)
-          {
-            wordSearch = null;
-            searchBounds = NullRect;
-          }
-          else
-          {
-            return this;
-          }
         }
       }
       if (battleOver)
@@ -264,28 +227,76 @@ namespace EveAutoRat.Classes
             }
           }
         }
-        //List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
-        //if (smallEnemies.Count > 1 && totalTime > smallClickTime)
-        //{
-        //  lastClick = parent.GetClickPoint(smallEnemies[0]);
-        //  lastClick.X += battleIconBounds.X;
-        //  lastClick.Y += battleIconBounds.Y;
-        //  Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-        //  smallClickTime = totalTime + 20000;
-        //}
+      }
+      if (smallEnemies.Count > 0 && wordSearch == null && totalTime > smallClickTime && totalTime > smallSeeTime && FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
+      {
+        if (smallSeeTime == 0)
+        {
+          smallSeeTime = totalTime + 5000;
+          smallClickTime = smallSeeTime;
+          return this;
+        }
+        foreach (Rectangle sr in smallEnemies)
+        {
+          bool isTargeted = false;
+          foreach (Rectangle r in enemyTargetedList)
+          {
+            if (sr.IntersectsWith(r))
+            {
+              isTargeted = true;
+              break;
+            }
+          }
+          if (!isTargeted)
+          {
+            Rectangle er = sr;
+            er.X += battleIconBounds.X;
+            er.Y += battleIconBounds.Y;
+            lastClick = parent.GetClickPoint(er);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+
+            if (pulseLaser.CurrentState == WeaponStateFlag.Active)
+            {
+              wordSearch = "Lock";
+            }
+            else
+            {
+              wordSearch = "Focus";
+            }
+            searchWordTimeout = totalTime + 2000;
+            searchBounds = popupBounds;
+            nextDelay = 900;
+            smallClickTime = totalTime + 10000;
+            pulseLaser.clickTime = smallClickTime;
+
+            return this;
+          }
+        }
+      }
+      float eyeClosed = FindIconSimilarity(bmp128, "eye", eyeClosedBounds, 128);
+      if (eyeClosed > 0.90f)
+      {
+        lastClick = parent.GetClickPoint(eyeClosedBounds);
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        nextDelay = 1000;
+        return this;
+      }
+      float eyeOpen = FindIconSimilarity(bmp128, "eye", eyeOpenBounds, 128);
+      if (eyeOpen > 0.9f)
+      {
+        string filterTitle = FindSingleWord(bmp64, filterTitleBounds);
+        if (filterTitle != "Pirates")
+        {
+          lastClick = parent.GetClickPoint(filterTitleBounds);
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          nextDelay = 1000;
+          wordSearch = "Pirates";
+          searchBounds = filterListBounds;
+          return this;
+        }
       }
 
       return this;
-    }
-
-    public override void DrawDebug(Graphics g)
-    {
-      Brush debugBackgroundColor = new SolidBrush(Color.FromArgb(128, 250, 0, 0));
-      Brush weaponColor = new SolidBrush(Color.FromArgb(100, 50, 250, 250));
-      Brush lastClickColor = new SolidBrush(Color.FromArgb(200, 250, 50, 250));
-      Brush nextClickColor = new SolidBrush(Color.FromArgb(200, 250, 250, 50));
-      g.FillRectangle(debugBackgroundColor, searchBounds);
-      g.FillEllipse(nextClickColor, new Rectangle(lastClick.X - 15, lastClick.Y - 15, 30, 30));
     }
   }
 }

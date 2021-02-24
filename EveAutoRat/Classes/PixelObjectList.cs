@@ -35,7 +35,7 @@ namespace EveAutoRat.Classes
       {
         if (po.text.StartsWith(iconName))
         {
-          if (bmp.Width > po.bmp.Width && bmp.Height > po.bmp.Height)
+          if (bmp.Width >= po.bmp.Width && bmp.Height >= po.bmp.Height)
           {
             TemplateMatch[] matchings = tm.ProcessImage(bmp, po.bmp);
             if (matchings.Length > 0)

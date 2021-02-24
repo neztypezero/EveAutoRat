@@ -1,7 +1,4 @@
-﻿using AForge.Imaging;
-using AForge.Imaging.Filters;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -23,7 +20,7 @@ namespace EveAutoRat.Classes
 
     public List<Rectangle> GetEnemyBounds()
     {
-      Bitmap screenBmp = threshHoldDictionary[0];
+      Bitmap screenBmp = parent.GetThreshHoldBitmap(0);
       Bitmap iconColumnEnemies = screenBmp.Clone(battleIconBounds, PixelFormat.Format24bppRgb);
       iconColumnEnemies = battleIconRedFilter.Apply(iconColumnEnemies);
       iconColumnEnemies = battleIconGrayFilter.Apply(iconColumnEnemies);
@@ -68,7 +65,7 @@ namespace EveAutoRat.Classes
 
     public int GetTargetEnemyCount()
     {
-      Bitmap bmp112 = threshHoldDictionary[112];
+      Bitmap bmp112 = parent.GetThreshHoldBitmap(112);
       using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
         Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
@@ -78,7 +75,7 @@ namespace EveAutoRat.Classes
 
     public List<Rectangle> GetTargetEnemyList()
     {
-      Bitmap bmp112 = threshHoldDictionary[112];
+      Bitmap bmp112 = parent.GetThreshHoldBitmap(112);
       using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
         Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
@@ -141,9 +138,10 @@ namespace EveAutoRat.Classes
       return NextState;
     }
 
-    public virtual void DrawDebug(Graphics g)
+    public override void Draw(Graphics g)
     {
-      return;
+      Brush lastClickColor = new SolidBrush(Color.FromArgb(150, 250, 50, 200));
+      g.FillEllipse(lastClickColor, new Rectangle(lastClick.X - 15, lastClick.Y - 15, 30, 30));
     }
   }
 }

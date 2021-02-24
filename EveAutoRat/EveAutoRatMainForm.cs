@@ -69,5 +69,10 @@ namespace EveAutoRat
     {
       player.startLearnProgram();
     }
+
+    private void EveAutoRatMainForm_FormClosing(object sender, FormClosingEventArgs e)
+    {
+      player.StopCurrentAction();
+    }
   }
 }

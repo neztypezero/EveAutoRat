@@ -89,6 +89,14 @@ namespace EveAutoRat.Classes
       }
       else
       {
+        StopCurrentAction();
+      }
+    }
+
+    public void StopCurrentAction()
+    {
+      if (currentAction != null)
+      {
         currentAction.Stop();
         currentAction = null;
       }
