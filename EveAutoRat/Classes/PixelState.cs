@@ -7,6 +7,18 @@ using System.Drawing.Imaging;
 
 namespace EveAutoRat.Classes
 {
+  public class FoundWord
+  {
+    public string word;
+    public Rectangle r;
+
+    public FoundWord(string word, Rectangle r)
+    {
+      this.word = word;
+      this.r = r;
+    }
+  }
+
   public class PixelState
   {
     protected static Rectangle eveEchoesIconBounds = new Rectangle(685, 235, 72, 72);
@@ -129,7 +141,12 @@ namespace EveAutoRat.Classes
       }
     }
 
-    public Rectangle FindWord(string word, Rectangle searchBounds)
+    public FoundWord FindWord(string word, Rectangle searchBounds)
+    {
+      return FindWord(new string[] { word }, searchBounds);
+    }
+
+    public FoundWord FindWord(string[] word, Rectangle searchBounds)
     {
       foreach (int threshhold in parent.threshHoldList)
       {
@@ -150,16 +167,17 @@ namespace EveAutoRat.Classes
               {
                 invertFilter.ApplyInPlace(ocrBmp);
                 string foundWord = OCR.GetText(ocrBmp, new Rectangle(0, 0, ocrBmp.Width, ocrBmp.Height)).Trim();
-                if (foundWord == word)
+                int index = Array.IndexOf(word, foundWord);
+                if (index >  -1)
                 {
-                  return new Rectangle(r.X + searchBounds.X, r.Y + searchBounds.Y, r.Width, r.Height);
+                  return new FoundWord(word[index], new Rectangle(r.X + searchBounds.X, r.Y + searchBounds.Y, r.Width, r.Height));
                 }
               }
             }
           }
         }
       }
-      return NullRect;
+      return null;
     }
 
     public Double FindSingleDouble(int threshhold, Rectangle searchBounds)

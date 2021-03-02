@@ -19,6 +19,7 @@ namespace EveAutoRat.Classes
     public Rectangle pixelBounds;
     public string name;
     public double clickTime = 0;
+    public double inactiveTime = 0;
 
     private BlobCounter objectCounter = new BlobCounter();
 
@@ -112,7 +113,7 @@ namespace EveAutoRat.Classes
       }
       if (currentState != newState)
       {
-        changeTime = time + 250;
+        changeTime = time + 300;
         currentState = newState;
       }
       if (time > changeTime)
@@ -120,6 +121,14 @@ namespace EveAutoRat.Classes
         if (currentState != lastState)
         {
           lastState = currentState;
+          if (currentState == WeaponStateFlag.InActive)
+          {
+            inactiveTime = time;
+          }
+          else
+          {
+            inactiveTime = 0;
+          }
         }
       }
     }

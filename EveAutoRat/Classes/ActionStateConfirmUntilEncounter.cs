@@ -29,10 +29,10 @@ namespace EveAutoRat.Classes
 
       if (wordSearch != null)
       {
-        Rectangle found = FindWord(wordSearch, wordSearchBounds);
-        if (found.X != -1)
+        FoundWord found = FindWord(wordSearch, wordSearchBounds);
+        if (found != null)
         {
-          lastClick = parent.GetClickPoint(found);
+          lastClick = parent.GetClickPoint(found.r);
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           nextDelay = 1500;
           wordSearch = null;

@@ -11,9 +11,6 @@ namespace EveAutoRat.Classes
     private double targetAllTime = 0;
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
-    private double smallSeeTime = 0;
-    private double smallClickTime = 0;
-    private double searchWordTimeout = 0;
     private double currentTotalTime = 0;
 
     private Font infoFont = new Font("Arial", 12);
@@ -32,8 +29,6 @@ namespace EveAutoRat.Classes
       battleOver = false;
       wordSearch = null;
       searchBounds = NullRect; 
-      smallSeeTime = 0;
-      smallClickTime = 0;
     }
 
     public override void Draw(Graphics g)
@@ -42,24 +37,17 @@ namespace EveAutoRat.Classes
       Brush stateBg = new SolidBrush(Color.FromArgb(150, 0, 0, 0));
       Brush textColor = new SolidBrush(Color.FromArgb(255, 255, 255, 255));
       g.FillRectangle(stateBg, infoBounds);
-      Point textPoint = new Point(infoBounds.X+20, infoBounds.Y+20);
+      Point textPoint = new Point(infoBounds.X + 20, infoBounds.Y + 20);
       g.DrawString("" + currentTotalTime, infoFont, textColor, textPoint);
       textPoint.Y += 20;
       g.DrawString("" + targetAllTime, infoFont, textColor, textPoint);
       textPoint.Y += 20;
       g.DrawString("" + battleOver, infoFont, textColor, textPoint);
       textPoint.Y += 20;
-      g.DrawString("" + smallSeeTime, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + smallClickTime, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
       g.DrawString("" + wordSearch, infoFont, textColor, textPoint);
       textPoint.Y += 20;
       g.DrawString("" + searchBounds, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + searchWordTimeout, infoFont, textColor, textPoint);
     }
-
     public override int GetThreshHold()
     {
       return 128;
@@ -102,6 +90,22 @@ namespace EveAutoRat.Classes
       Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
       Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
+      if (wordSearch != null)
+      {
+        FoundWord found = FindWord(wordSearch, searchBounds);
+        if (found != null)
+        {
+          lastClick = parent.GetClickPoint(found.r);
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          wordSearch = null;
+          searchBounds = NullRect;
+          nextDelay = 1000;
+          return this;
+        }
+        return this;
+      }
+
+
       List<Rectangle> enemyBoundsList = GetEnemyBounds();
       List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
       List<Rectangle> enemyTargetedList = GetTargetEnemyList();
@@ -114,38 +118,26 @@ namespace EveAutoRat.Classes
         targetAllTime = totalTime + 5000;
       }
 
-      if (enemyBoundsList.Count < 2)
+      if (totalTime > targetAllTime)
       {
-        smallSeeTime = 0;
-      }
-
-      if (totalTime > targetAllTime && (smallEnemies.Count == 0 || (smallEnemies.Count == 1 && enemyTargetedList.Count > 0)))
-      {
-        if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
+        if ((smallEnemies.Count == 0 || (smallEnemies.Count == 1 && enemyTargetedList.Count > 0)))
         {
-          targetAllTime = totalTime + 5000;
-          lastClick = parent.GetClickPoint(targetAllBounds);
-          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-          return this;
+          if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
+          {
+            if (targetAllTime == 0)
+            {
+              targetAllTime = totalTime + 5000;
+              return this;
+            }
+            targetAllTime = totalTime + 5000;
+            lastClick = parent.GetClickPoint(targetAllBounds);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            return this;
+          }
         }
-      }
-      if ((wordSearch == "Lock" && enemyTargetedList.Count == 0) || (wordSearch == "Focus" && enemyBoundsList.Count == 0) || (searchWordTimeout != 0 && totalTime > searchWordTimeout))
-      {
-        wordSearch = null;
-        searchBounds = NullRect;
-        searchWordTimeout = 0;
-      }
-      if (wordSearch != null)
-      {
-        Rectangle found = FindWord(wordSearch, searchBounds);
-        if (found.X != -1)
+        else
         {
-          lastClick = parent.GetClickPoint(found);
-          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-          wordSearch = null;
-          searchBounds = NullRect;
-          nextDelay = 2000;
-          return this;
+          targetAllTime = 0;
         }
       }
       if (battleOver)
@@ -228,14 +220,8 @@ namespace EveAutoRat.Classes
           }
         }
       }
-      if (smallEnemies.Count > 0 && wordSearch == null && totalTime > smallClickTime && totalTime > smallSeeTime && FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
+      if (smallEnemies.Count > 0 && wordSearch == null && totalTime > pulseLaser.clickTime && FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
       {
-        if (smallSeeTime == 0)
-        {
-          smallSeeTime = totalTime + 5000;
-          smallClickTime = smallSeeTime;
-          return this;
-        }
         foreach (Rectangle sr in smallEnemies)
         {
           bool isTargeted = false;
@@ -263,12 +249,8 @@ namespace EveAutoRat.Classes
             {
               wordSearch = "Focus";
             }
-            searchWordTimeout = totalTime + 2000;
+            pulseLaser.clickTime = totalTime + 10000;
             searchBounds = popupBounds;
-            nextDelay = 900;
-            smallClickTime = totalTime + 10000;
-            pulseLaser.clickTime = smallClickTime;
-
             return this;
           }
         }
@@ -294,6 +276,17 @@ namespace EveAutoRat.Classes
           searchBounds = filterListBounds;
           return this;
         }
+      }
+      if (pulseLaser.inactiveTime != 0 && enemyBoundsList.Count > 0 && pulseLaser.inactiveTime > 0 && totalTime > (pulseLaser.inactiveTime + 15000) && totalTime > pulseLaser.clickTime)
+      {
+        lastClick = enemyPoint;
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        nextDelay = 1000;
+        wordSearch = "Focus";
+        pulseLaser.clickTime = totalTime + 10000;
+        searchBounds = popupBounds;
+        nextDelay = 1000;
+        return this;
       }
 
       return this;

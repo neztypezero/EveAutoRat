@@ -58,6 +58,14 @@ namespace EveAutoRat.Classes
 
     public void Start()
     {
+      Win32.RECT r;
+      if (Win32.GetWindowRect(emuHWnd, out r))
+      {
+        parentForm.Width = r.Right - r.Left + 16;
+        parentForm.Height = r.Bottom - r.Top + 11;
+        parentForm.Left = -7;
+        parentForm.Top = 0;
+      }
       Thread actionThread = new Thread(RunEveryLoop);
       actionThread.Start();
     }

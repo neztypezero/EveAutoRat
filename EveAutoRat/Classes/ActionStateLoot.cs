@@ -51,8 +51,8 @@ namespace EveAutoRat.Classes
 
       if (wordSearch != null)
       {
-        Rectangle found = FindWord(wordSearch, wordSearchBounds);
-        if (found.X != -1)
+        FoundWord found = FindWord(wordSearch, wordSearchBounds);
+        if (found != null)
         {
           if (looting == 1)
           {
@@ -66,8 +66,7 @@ namespace EveAutoRat.Classes
             looting = 0;
             wordSearch = null;
             wordSearchBounds = NullBounds;
-            Thread.Sleep(250);
-            nextDelay = 2000;
+            nextDelay = 1000;
           }
           else
           {
@@ -75,7 +74,8 @@ namespace EveAutoRat.Classes
             wordSearch = null;
             wordSearchBounds = NullBounds;
           }
-          lastClick = parent.GetClickPoint(found);
+          lastClick = parent.GetClickPoint(found.r);
+          Thread.Sleep(500);
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           return this;
         }

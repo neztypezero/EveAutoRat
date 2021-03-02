@@ -39,7 +39,7 @@ namespace EveAutoRat.Classes
         .SetNextState(new ActionStateStartEncounter(this, 500))
         .SetNextState(new ActionStateConfirmUntilEncounter(this, 100))
         .SetNextState(new ActionStateBattle(this, 100))
-        .SetNextState(new ActionStateLoot(this, 1000))
+        //.SetNextState(new ActionStateLoot(this, 1000))
         .SetNextState(currentState)
       ;
 

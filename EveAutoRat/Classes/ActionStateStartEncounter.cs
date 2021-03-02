@@ -12,7 +12,7 @@ namespace EveAutoRat.Classes
 
     public override ActionState Run(double totalTime)
     {
-      Rectangle found;
+      FoundWord found;
       Bitmap bmp0 = parent.GetThreshHoldBitmap(0);
       Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
@@ -54,9 +54,9 @@ namespace EveAutoRat.Classes
         return this;
       }
       found = FindWord("Accept", encounterAcceptBounds);
-      if (found.X > -1)
+      if (found != null)
       {
-        lastClick = parent.GetClickPoint(found);
+        lastClick = parent.GetClickPoint(found.r);
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
         return this;
       }

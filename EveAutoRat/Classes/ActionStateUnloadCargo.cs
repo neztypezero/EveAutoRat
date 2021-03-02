@@ -90,10 +90,10 @@ namespace EveAutoRat.Classes
         else if (currentDestinationState == UnloadCargoStateFlag.DestinationMenu)
         {
           currentDestinationState = UnloadCargoStateFlag.DestinationAuto;
-          Rectangle found = FindWord("Destination", destinationSetAsBounds);
-          if (found.X > -1)
+          FoundWord found = FindWord("Destination", destinationSetAsBounds);
+          if (found != null)
           {
-            lastClick = parent.GetClickPoint(found);
+            lastClick = parent.GetClickPoint(found.r);
             Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
             return this;
           }
