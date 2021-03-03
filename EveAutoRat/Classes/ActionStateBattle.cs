@@ -12,6 +12,7 @@ namespace EveAutoRat.Classes
     private bool battleOver = false;
     private double battleOverWaitTime = 0;
     private double currentTotalTime = 0;
+    private double wordSearchTimeout = 0;
 
     private Font infoFont = new Font("Arial", 12);
     private Rectangle infoBounds = new Rectangle(10, 300, 320, 500);
@@ -28,7 +29,8 @@ namespace EveAutoRat.Classes
       battleOverWaitTime = 0;
       battleOver = false;
       wordSearch = null;
-      searchBounds = NullRect; 
+      searchBounds = NullRect;
+      wordSearchTimeout = 0;
     }
 
     public override void Draw(Graphics g)
@@ -102,7 +104,16 @@ namespace EveAutoRat.Classes
           nextDelay = 1000;
           return this;
         }
-        return this;
+        else if (totalTime < wordSearchTimeout)
+        {
+          return this;
+        }
+        else
+        {
+          wordSearch = null;
+          searchBounds = NullRect;
+          wordSearchTimeout = 0;
+        }
       }
 
 
@@ -249,6 +260,7 @@ namespace EveAutoRat.Classes
             {
               wordSearch = "Focus";
             }
+            wordSearchTimeout = totalTime + 2500;
             pulseLaser.clickTime = totalTime + 10000;
             searchBounds = popupBounds;
             return this;
@@ -273,20 +285,10 @@ namespace EveAutoRat.Classes
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           nextDelay = 1000;
           wordSearch = "Pirates";
+          wordSearchTimeout = totalTime + 2500;
           searchBounds = filterListBounds;
           return this;
         }
-      }
-      if (pulseLaser.inactiveTime != 0 && enemyBoundsList.Count > 0 && pulseLaser.inactiveTime > 0 && totalTime > (pulseLaser.inactiveTime + 15000) && totalTime > pulseLaser.clickTime)
-      {
-        lastClick = enemyPoint;
-        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-        nextDelay = 1000;
-        wordSearch = "Focus";
-        pulseLaser.clickTime = totalTime + 10000;
-        searchBounds = popupBounds;
-        nextDelay = 1000;
-        return this;
       }
 
       return this;
