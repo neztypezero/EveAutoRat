@@ -30,11 +30,36 @@ namespace EveAutoRat.Classes
       Bitmap bmp96 = parent.GetThreshHoldBitmap(96);
       Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
 
+      if (currentDestinationState == UnloadCargoStateFlag.Unknown)
+      {
+        string wordSearch = FindSingleWord(bmp128, rewardsHeadingBounds);
+        if (wordSearch == "Monthly Login Rewards")
+        {
+          wordSearch = FindSingleWord(bmp128, nextRewardBounds);
+          if (GetStringSimilarity(wordSearch, "Next Reward: Now") < 2)
+          {
+            wordSearch = FindSingleWord(bmp64, claimAllBounds);
+            if (wordSearch == "CLAIM ALL")
+            {
+              lastClick = parent.GetClickPoint(claimAllBounds);
+              Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+              nextDelay = 2500;
+              return this;
+            }
+          }
+          else
+          {
+            lastClick = parent.GetClickPoint(rewardsCloseBounds);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            return this;
+          }
+        }
+      }
+
       if (parent.CurrentHoldAmount > 0.85 || (parent.InsideState == InsideFlag.Inside && parent.CurrentHoldAmount > 0.10) || currentDestinationState != UnloadCargoStateFlag.Unknown)
       {
         if (currentDestinationState == UnloadCargoStateFlag.Unknown)
         {
-          
           float destinationClosed = FindIconSimilarity(bmp80, "destination", destinationClosedBounds, 80);
           if (destinationClosed > 0.9f)
           {

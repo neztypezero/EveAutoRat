@@ -73,6 +73,10 @@ namespace EveAutoRat.Classes
     protected static Rectangle jumpToBounds = new Rectangle(55, 470, 280, 36);
     protected static Rectangle noSearchResultsBounds = new Rectangle(1580, 625, 300, 60);
     protected static Rectangle topEnemyBounds = new Rectangle(800, 50, 750, 160);
+    protected static Rectangle rewardsHeadingBounds = new Rectangle(470, 270, 465, 65);
+    protected static Rectangle nextRewardBounds = new Rectangle(470, 330, 270, 45);
+    protected static Rectangle claimAllBounds = new Rectangle(1650, 920, 160, 50);
+    protected static Rectangle rewardsCloseBounds = new Rectangle(1850, 100, 30, 30);
 
     protected static Rectangle[] weaponBoundsList = new Rectangle[] {
       new Rectangle(1202, 859, 110, 110),

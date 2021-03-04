@@ -13,7 +13,7 @@ namespace EveAutoRat.Classes
       if (textEngine == null)
       {
         textEngine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
-        textEngine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.%()' ");
+        textEngine.SetVariable("tessedit_char_whitelist", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.%()': ");
       }
       if (region.X > -1 && region.Y > -1 && (region.Width + region.X) <= image.Width && (region.Height + region.Y) <= image.Height)
       {

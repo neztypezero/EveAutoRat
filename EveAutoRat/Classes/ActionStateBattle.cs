@@ -116,7 +116,6 @@ namespace EveAutoRat.Classes
         }
       }
 
-
       List<Rectangle> enemyBoundsList = GetEnemyBounds();
       List<Rectangle> smallEnemies = GetSmallEnemyBoundList(enemyBoundsList);
       List<Rectangle> enemyTargetedList = GetTargetEnemyList();
