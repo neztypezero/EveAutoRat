@@ -78,6 +78,8 @@ namespace EveAutoRat.Classes
       Bitmap bmp112 = parent.GetThreshHoldBitmap(112);
       using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
+        //objectCounter.ProcessImage(iconColumnEnemies);
+        //Rectangle[] rArray = objectCounter.GetObjectsRectangles();
         Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
         return FindIconSimilarityList(iconColumnEnemies, "enemy_targeted", r, 112, 0.9f);
       }

@@ -49,6 +49,12 @@ namespace EveAutoRat.Classes
         nextDelay = 1000;
         return this;
       }
+      if (FindSingleWord(bmp128, encounterBeginBounds).Contains("Begin"))
+      {
+        lastClick = parent.GetClickPoint(encounterBeginBounds);
+        Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        return this;
+      }
 
       foreach (WeaponState weapon in parent.WeaponsState.Values)
       {

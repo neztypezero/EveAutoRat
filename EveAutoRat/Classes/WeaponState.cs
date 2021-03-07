@@ -26,6 +26,7 @@ namespace EveAutoRat.Classes
     private WeaponStateFlag lastState = WeaponStateFlag.Unknown;
     private WeaponStateFlag currentState = WeaponStateFlag.Unknown;
     private double changeTime = 0;
+    private double stateDelay = 300;
 
     ColorFiltering outlineColorFilter = new ColorFiltering(new AForge.IntRange(180, 200), new AForge.IntRange(200, 255), new AForge.IntRange(200, 255));
     public Bitmap previousFrame = null;
@@ -113,7 +114,7 @@ namespace EveAutoRat.Classes
       }
       if (currentState != newState)
       {
-        changeTime = time + 300;
+        changeTime = time + stateDelay;
         currentState = newState;
       }
       if (time > changeTime)

@@ -11,6 +11,10 @@ namespace EveAutoRat.Classes
 {
   class PixelStateWeapons : PixelState
   {
+    private Pen red = new Pen(Brushes.Red, 3);
+    private Pen orange = new Pen(Brushes.Orange, 3);
+    private Pen yellow = new Pen(Brushes.Yellow, 3);
+
     public Dictionary<string, WeaponState> weaponDictionary = new Dictionary<string, WeaponState>();
     private Dictionary<Rectangle, int> currentWeaponsBounds = new Dictionary<Rectangle, int>();
 
@@ -86,7 +90,7 @@ namespace EveAutoRat.Classes
           WeaponStateFlag weaponFlag = weapon.CurrentState;
           if (weapon.diffFrame != null)
           {
-            g.DrawImage(weapon.diffFrame, weapon.bounds.X, weapon.bounds.Y);
+            //g.DrawImage(weapon.diffFrame, weapon.bounds.X, weapon.bounds.Y);
             objectCounter.ProcessImage(weapon.diffFrame);
             Rectangle[] rects = objectCounter.GetObjectsRectangles();
             Point cp = new Point(weapon.bounds.X + weapon.bounds.Width / 2, weapon.bounds.Y + weapon.bounds.Height / 2);
@@ -110,22 +114,22 @@ namespace EveAutoRat.Classes
               {
                 if (d1 > innerRadius || d2 > innerRadius || d3 > innerRadius || d4 > innerRadius)
                 {
-                  g.DrawRectangle(Pens.Red, new Rectangle(x, y, r.Width, r.Height));
+                  g.FillRectangle(Brushes.Red, new Rectangle(x, y, r.Width, r.Height));
                 }
               }
             }
           }
           if (weaponFlag == WeaponStateFlag.Active)
           {
-            g.DrawEllipse(Pens.Red, weapon.bounds);
+            g.DrawEllipse(red, weapon.bounds);
           }
           else if (weaponFlag == WeaponStateFlag.InActive)
           {
-            g.DrawEllipse(Pens.Orange, weapon.bounds);
+            g.DrawEllipse(orange, weapon.bounds);
           }
           else
           {
-            g.DrawEllipse(Pens.Yellow, weapon.bounds);
+            g.DrawEllipse(yellow, weapon.bounds);
           }
         }
     }

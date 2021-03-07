@@ -63,7 +63,7 @@ namespace EveAutoRat.Classes
       {
         parentForm.Width = r.Right - r.Left + 16;
         parentForm.Height = r.Bottom - r.Top + 11;
-        parentForm.Left = -7;
+        parentForm.Left = -parentForm.Width + 7;
         parentForm.Top = 0;
       }
       Thread actionThread = new Thread(RunEveryLoop);
