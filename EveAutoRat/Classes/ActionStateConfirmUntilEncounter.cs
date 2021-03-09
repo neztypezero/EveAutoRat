@@ -25,7 +25,6 @@ namespace EveAutoRat.Classes
     {
       Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
       Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
-      List<Rectangle> enemyBoundsList = GetEnemyBounds();
 
       if (wordSearch != null)
       {
@@ -89,12 +88,9 @@ namespace EveAutoRat.Classes
         }
       }
 
-      if (enemyBoundsList != null && enemyBoundsList.Count > 0)
+      if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
       {
-        if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
-        {
-          return NextState;
-        }
+        return NextState;
       }
 
       return this;

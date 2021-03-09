@@ -26,6 +26,13 @@ namespace EveAutoRat.Classes
           Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
           nextDelay = 1500;
 
+          foreach (WeaponState weapon in parent.WeaponsState.Values)
+          {
+            if (weapon.name.StartsWith("heat-sink")) {
+              weapon.clickTime = totalTime + 88500;
+            }
+          }
+
           running = true;
           return this;
         }

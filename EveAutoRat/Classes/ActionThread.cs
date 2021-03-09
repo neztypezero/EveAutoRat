@@ -14,7 +14,7 @@ namespace EveAutoRat.Classes
     protected EveAutoRatMainForm parentForm = null;
     protected IntPtr emuHWnd = IntPtr.Zero;
     protected IntPtr eventHWnd = IntPtr.Zero;
-    protected Grayscale grayScaleFilter = new Grayscale(0.2125, 0.7154, 0.0721);
+    public Grayscale grayScaleFilter = new Grayscale(0.2125, 0.7154, 0.0721);
     public int[] threshHoldList = new int[] { 64, 80, 96, 112, 128 };
     protected Dictionary<int, Bitmap> threshHoldDictionary = new Dictionary<int, Bitmap>();
     protected Bitmap currentFrame = null;

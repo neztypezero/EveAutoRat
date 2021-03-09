@@ -20,6 +20,7 @@ namespace EveAutoRat.Classes
     public string name;
     public double clickTime = 0;
     public double inactiveTime = 0;
+    public double activeTime = 0;
 
     private BlobCounter objectCounter = new BlobCounter();
 
@@ -122,6 +123,15 @@ namespace EveAutoRat.Classes
         if (currentState != lastState)
         {
           lastState = currentState;
+          
+          if (currentState == WeaponStateFlag.Active)
+          {
+            activeTime = time;
+          }
+          else
+          {
+            activeTime = 0;
+          }
           if (currentState == WeaponStateFlag.InActive)
           {
             inactiveTime = time;

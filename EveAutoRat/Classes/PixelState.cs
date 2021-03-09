@@ -78,6 +78,9 @@ namespace EveAutoRat.Classes
     protected static Rectangle claimAllBounds = new Rectangle(1650, 920, 160, 50);
     protected static Rectangle rewardsCloseBounds = new Rectangle(1850, 100, 30, 30);
 
+    protected static Font infoFont = new Font("Arial", 12);
+    protected static Rectangle infoBounds = new Rectangle(10, 300, 500, 800);
+
     protected static Rectangle[] weaponBoundsList = new Rectangle[] {
       new Rectangle(1202, 859, 110, 110),
       new Rectangle(1319, 859, 110, 110),
@@ -101,6 +104,8 @@ namespace EveAutoRat.Classes
 
     protected static Grayscale battleIconGrayFilter = new Grayscale(1.0, 0.0, 0.0);
     protected static ColorFiltering battleIconRedFilter = new ColorFiltering(new AForge.IntRange(150, 255), new AForge.IntRange(22, 38), new AForge.IntRange(40, 60));
+    protected static ColorFiltering distanceTextFilter = new ColorFiltering(new AForge.IntRange(40, 255), new AForge.IntRange(40, 255), new AForge.IntRange(40, 255));
+    protected static ColorFiltering distanceTextFilter2 = new ColorFiltering(new AForge.IntRange(200, 255), new AForge.IntRange(200, 255), new AForge.IntRange(200, 255));
     protected static Threshold battleIconThresholdFilter = new Threshold(50);
     protected Invert invertFilter = new Invert();
 

@@ -17,45 +17,30 @@ namespace EveAutoRat.Classes
       this.delay = delay;
       this.nextDelay = delay;
     }
-
-    public List<Rectangle> GetEnemyBounds()
+    public EnemyInfo[] GetEnemyList()
     {
-      Bitmap screenBmp = parent.GetThreshHoldBitmap(0);
-      Bitmap iconColumnEnemies = screenBmp.Clone(battleIconBounds, PixelFormat.Format24bppRgb);
-      iconColumnEnemies = battleIconRedFilter.Apply(iconColumnEnemies);
-      iconColumnEnemies = battleIconGrayFilter.Apply(iconColumnEnemies);
-      iconColumnEnemies = battleIconThresholdFilter.Apply(iconColumnEnemies);
-
-      objectCounter.ProcessImage(iconColumnEnemies);
-      iconColumnEnemies.Dispose();
-      Rectangle[] rArray = objectCounter.GetObjectsRectangles();
-
-      List<Rectangle> rList = new List<Rectangle>();
-      foreach (Rectangle r in rArray)
-      {
-        if (r.Height < 3)
-        {
-          int n = rList.Count;
-          if (n > 0)
-          {
-            rList[n - 1].Intersect(r);
-          }
-        } 
-        else if (r.Height > 9)
-        {
-          rList.Add(r);
-        }
-      }
-
-      return rList;
+      return parent.EnemyList;
     }
 
-    public List<Rectangle> GetSmallEnemyBoundList(List<Rectangle> enemyList)
+    public EnemyInfo[] GetSmallEnemyList(EnemyInfo[] enemyList)
+    {
+      List<EnemyInfo> eList = new List<EnemyInfo>();
+      foreach (EnemyInfo e in enemyList)
+      {
+        if (e.type <= EnemyTypes.Destroyer)
+        {
+          eList.Add(e);
+        }
+      }
+      return eList.ToArray();
+    }
+
+    public List<Rectangle> GetLargeEnemyBoundList(List<Rectangle> enemyList)
     {
       List<Rectangle> rList = new List<Rectangle>();
       foreach (Rectangle r in enemyList)
       {
-        if (r.Height > 9 && r.Height < 13)
+        if (r.Height > 50)
         {
           rList.Add(r);
         }
@@ -63,14 +48,17 @@ namespace EveAutoRat.Classes
       return rList;
     }
 
-    public int GetTargetEnemyCount()
+    public int GetTargetEnemyCount(EnemyInfo[] enemyList)
     {
-      Bitmap bmp112 = parent.GetThreshHoldBitmap(112);
-      using (Bitmap iconColumnEnemies = bmp112.Clone(battleIconBounds, PixelFormat.Format24bppRgb))
+      int count = 0;
+      foreach (EnemyInfo e in enemyList)
       {
-        Rectangle r = new Rectangle(0, 0, iconColumnEnemies.Width, iconColumnEnemies.Height);
-        return FindIconSimilarityCount(iconColumnEnemies, "enemy_targeted", r, 112, 0.9f);
+        if (e.isTargeted)
+        {
+          count++;
+        }
       }
+      return count;
     }
 
     public List<Rectangle> GetTargetEnemyList()
