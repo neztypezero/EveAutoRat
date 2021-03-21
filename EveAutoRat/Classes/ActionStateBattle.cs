@@ -13,9 +13,16 @@ namespace EveAutoRat.Classes
     private double battleOverWaitTime = 0;
     private double currentTotalTime = 0;
     private double wordSearchTimeout = 0;
+    private int wave = 1;
+    private int lastEnemyCount = 99;
+
+    private string iconSearch;
+    private Rectangle iconSearchBounds = new Rectangle(0, 0, 0, 0);
 
     private string wordSearch = null;
     private Rectangle searchBounds = new Rectangle(0, 0, 0, 0);
+
+    private EnemyInfo[] currentEnemies = new EnemyInfo[] {};
 
     public ActionStateBattle(ActionThreadNewsRAT parent, double delay) : base(parent, delay)
     {
@@ -25,9 +32,12 @@ namespace EveAutoRat.Classes
     {
       battleOverWaitTime = 0;
       battleOver = false;
+      iconSearch = null;
       wordSearch = null;
       searchBounds = NullRect;
       wordSearchTimeout = 0;
+      wave = 1;
+      lastEnemyCount = 99;
     }
 
     public override void Draw(Graphics g)
@@ -40,33 +50,21 @@ namespace EveAutoRat.Classes
       Brush textColor = new SolidBrush(Color.FromArgb(255, 255, 255, 255));
       g.FillRectangle(stateBg, infoBounds);
       Point textPoint = new Point(infoBounds.X + 20, infoBounds.Y + 20);
-      g.DrawString("" + currentTotalTime, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + targetAllTime, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + battleOver, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + wordSearch, infoFont, textColor, textPoint);
-      textPoint.Y += 20;
-      g.DrawString("" + searchBounds, infoFont, textColor, textPoint);
 
-      if (pulseLaser != null)
-      {
-        textPoint.Y += 20;
-        g.DrawString("" + pulseLaser.CurrentState, infoFont, textColor, textPoint);
-        textPoint.Y += 20;
-        g.DrawString("" + pulseLaser.inactiveTime, infoFont, textColor, textPoint);
-      }
+      g.DrawString("Current Wave: " + wave, infoFont, textColor, textPoint);
+      textPoint.Y += 20;
+      g.DrawString("Last Enemy Count: " + lastEnemyCount, infoFont, textColor, textPoint);
+
       foreach (WeaponState weapon in parent.WeaponsState.Values)
       {
         textPoint.Y += 20;
-        g.DrawString(weapon.name + " " + (weapon.clickTime - currentTotalTime), infoFont, textColor, textPoint);
+        g.DrawString(weapon.name + " " + weapon.CurrentState, infoFont, textColor, textPoint);
       }
       textPoint.Y += 20;
-      foreach (EnemyInfo enemy in parent.EnemyList)
+      foreach (EnemyInfo enemy in currentEnemies)
       {
         textPoint.Y += 20;
-        g.DrawString(enemy.type + " " + enemy.isTargeted + " " + enemy.bounds, infoFont, textColor, textPoint);
+        g.DrawString(enemy.type + ": " + enemy.isTargeted + " " + enemy.distance, infoFont, textColor, textPoint);
       }
     }
 
@@ -106,11 +104,60 @@ namespace EveAutoRat.Classes
       return new Point(-1, -1);
     }
 
+    public void CalculateCurrentEnemiesDistances()
+    {
+      double d = Double.NaN;
+      foreach (EnemyInfo e in currentEnemies)
+      {
+        Dictionary<int, int> nList = new Dictionary<int, int>();
+        foreach (int threshold in e.distanceBmp.Keys)
+        {
+          Bitmap bmp = e.distanceBmp[threshold];
+          Rectangle r = new Rectangle(0, 0, bmp.Width, bmp.Height);
+          if (Double.TryParse(OCR.GetTextInvert(bmp, r), out d))
+          {
+            int i = (int)d;
+            if (nList.ContainsKey(i))
+            {
+              nList[i]++;
+            }
+            else
+            {
+              nList[i] = 1;
+            }
+          }
+        }
+        if (nList.Count > 0)
+        {
+          int distance = 0;
+          int count = 0;
+          foreach (int i in nList.Keys)
+          {
+            if (nList[i] > count)
+            {
+              distance = i;
+              count = nList[i];
+            }
+          }
+          e.distance = distance;
+        }
+      }
+    }
+
     public override ActionState Run(double totalTime)
     {
-      Bitmap screenBmp = parent.GetThreshHoldBitmap(0);
       Bitmap bmp64 = parent.GetThreshHoldBitmap(64);
       Bitmap bmp128 = parent.GetThreshHoldBitmap(128);
+
+      currentEnemies = GetEnemyList();
+      int currentEnemyCount = currentEnemies.Length;
+      if (lastEnemyCount <= 1 && currentEnemyCount > 1)
+      {
+        wave++;
+        targetAllTime = totalTime + 5000;
+      }
+      lastEnemyCount = currentEnemyCount;
+      //CalculateCurrentEnemiesDistances();
 
       if (wordSearch != null)
       {
@@ -135,47 +182,64 @@ namespace EveAutoRat.Classes
           wordSearchTimeout = 0;
         }
       }
+      if (iconSearch != null)
+      {
+        List<Rectangle> iconsFound = FindIconSimilarityList(bmp128, iconSearch, battleActionIconBounds, 128, 0.9f);
+        if (iconsFound.Count == 1)
+        {
+          lastClick = parent.GetClickPoint(iconsFound[0]);
+          lastClick.X += battleActionIconBounds.X;
+          lastClick.Y += battleActionIconBounds.Y;
+          Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+          iconSearch = null;
+          nextDelay = 1000;
+        }
+        if (totalTime > wordSearchTimeout)
+        {
+          iconSearch = null;
+        }
+        else
+        {
+          return this;
+        }
+      }
 
-      EnemyInfo[] enemyList = GetEnemyList();
-      EnemyInfo[] smallEnemies = GetSmallEnemyList(enemyList);
+      EnemyInfo[] smallEnemies = GetSmallEnemyList(currentEnemies);
 
       currentTotalTime = totalTime;
 
       WeaponState pulseLaser = GetWeapon();
 
-      if (enemyList.Length == 0 || smallEnemies.Length > 1)
+      if (currentEnemies.Length == 0 || smallEnemies.Length > 1)
       {
         targetAllTime = totalTime + 5000;
       }
 
-      Point enemyPoint = FindFirstEnemy(enemyList);
+      Point enemyPoint = FindFirstEnemy(currentEnemies);
       if (FindIconSimilarity(bmp128, "target_all", targetAllBounds, 128) > 0.9f)
       {
-        if (smallEnemies.Length > 0 && wordSearch == null && totalTime > pulseLaser.clickTime)
+        if (smallEnemies.Length > 0 && wordSearch == null && iconSearch == null && totalTime > pulseLaser.clickTime)
         {
           foreach (EnemyInfo enemy in smallEnemies)
           {
             if (!enemy.isTargeted)
             {
               Rectangle er = enemy.bounds;
-              er.X += battleIconBounds.X;
-              er.Y += battleIconBounds.Y;
               lastClick = parent.GetClickPoint(er);
               Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
 
               if (pulseLaser.CurrentState == WeaponStateFlag.Active)
               {
-                wordSearch = "Lock";
+                iconSearch = "lock";
               }
               else
               {
-                wordSearch = "Focus";
+                iconSearch = "focus_fire";
               }
               nextDelay = 500;
-              wordSearchTimeout = totalTime + 2500;
               pulseLaser.clickTime = totalTime + 10000;
+              wordSearchTimeout = totalTime + 5000;
               targetAllTime = totalTime + 10000;
-              searchBounds = popupBounds;
               
               return this;
             }
@@ -183,7 +247,7 @@ namespace EveAutoRat.Classes
         }
         if (totalTime > targetAllTime)
         {
-          if ((smallEnemies.Length == 0 || (smallEnemies.Length == 1 && GetTargetEnemyCount(enemyList) > 0)))
+          if ((smallEnemies.Length == 0 || (smallEnemies.Length == 1 && smallEnemies[0].isTargeted)))
           {
             targetAllTime = totalTime + 5000;
             lastClick = parent.GetClickPoint(targetAllBounds);
@@ -200,19 +264,27 @@ namespace EveAutoRat.Classes
       {
         lastClick = enemyPoint;
         Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-        wordSearch = "Focus";
+        iconSearch = "focus_fire";
         wordSearchTimeout = totalTime + 2500;
-        searchBounds = popupBounds;
         return this;
       }
-      //if (smallEnemies.Count > 1 && enemyTargetedList.Count > 1)
-      //{
-      //  List<Rectangle> largeEnemies = GetLargeEnemyBoundList(enemyBoundsList);
-      //  if (largeEnemies.Count > 0)
-      //  {
-      //    Console.WriteLine(largeEnemies[0]);
-      //  }
-      //}
+      if (smallEnemies.Length > 1)
+      {
+        foreach (EnemyInfo e in currentEnemies)
+        {
+          if (e.isTargeted && e.type >= EnemyTypes.Cruiser)
+          {
+            Rectangle er = e.bounds;
+            lastClick = parent.GetClickPoint(er);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+
+            iconSearch = "lock";
+            nextDelay = 500;
+            wordSearchTimeout = totalTime + 5000;
+            return this;
+          }
+        }
+      }
 
       if (battleOver)
       {

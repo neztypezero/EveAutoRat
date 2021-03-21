@@ -88,56 +88,56 @@ namespace EveAutoRat.Classes
             float destinationPin = FindIconSimilarity(bmp80, "destination_pin", destinationPinBounds, 80);
             if (destinationPin > 0.9f)
             {
-              currentDestinationState = UnloadCargoStateFlag.DestinationMenu;
+              currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
               lastClick = parent.GetClickPoint(destinationPinBounds);
-              Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+              Win32.SendMouseClick(eventHWnd, lastClick.X+400, lastClick.Y);
               nextDelay = 2000;
               return this;
             }
-            else
-            {
-              float destinationSet = FindIconSimilarity(bmp0, "destination_set", destinationSetBounds, 0);
-              if (destinationSet > 0.9f)
-              {
-                lastClick = parent.GetClickPoint(destinationOpenBounds);
-                Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-              }
-              else
-              {
-                lastClick = parent.GetClickPoint(destinationPinBounds);
-                lastClick.Y -= 100;
-                Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-                return this;
-              }
-            }
+            //else
+            //{
+            //  float destinationSet = FindIconSimilarity(bmp0, "destination_set", destinationSetBounds, 0);
+            //  if (destinationSet > 0.9f)
+            //  {
+            //    lastClick = parent.GetClickPoint(destinationOpenBounds);
+            //    Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            //  }
+            //  else
+            //  {
+            //    lastClick = parent.GetClickPoint(destinationPinBounds);
+            //    lastClick.Y -= 100;
+            //    Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+            //    return this;
+            //  }
+            //}
           }
         }
-        else if (currentDestinationState == UnloadCargoStateFlag.DestinationMenu)
-        {
-          currentDestinationState = UnloadCargoStateFlag.DestinationAuto;
-          FoundWord found = FindWord("Destination", destinationSetAsBounds);
-          if (found != null)
-          {
-            lastClick = parent.GetClickPoint(found.r);
-            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-            return this;
-          }
-        }
-        else if (currentDestinationState == UnloadCargoStateFlag.DestinationAuto)
-        {
-          float destinationSet = FindIconSimilarity(bmp0, "destination_set", destinationSetBounds, 0);
-          if (destinationSet > 0.9f)
-          {
-            float destinationAuto = FindIconSimilarity(bmp96, "destination_auto", destinationAutoBounds, 96);
-            if (destinationAuto > 0.9f)
-            {
-              currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
-              lastClick = parent.GetClickPoint(destinationAutoBounds);
-              Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
-              return this;
-            }
-          }
-        } 
+        //else if (currentDestinationState == UnloadCargoStateFlag.DestinationMenu)
+        //{
+        //  currentDestinationState = UnloadCargoStateFlag.DestinationAuto;
+        //  FoundWord found = FindWord("Destination", destinationSetAsBounds);
+        //  if (found != null)
+        //  {
+        //    lastClick = parent.GetClickPoint(found.r);
+        //    Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        //    return this;
+        //  }
+        //}
+        //else if (currentDestinationState == UnloadCargoStateFlag.DestinationAuto)
+        //{
+        //  float destinationSet = FindIconSimilarity(bmp0, "destination_set", destinationSetBounds, 0);
+        //  if (destinationSet > 0.9f)
+        //  {
+        //    float destinationAuto = FindIconSimilarity(bmp96, "destination_auto", destinationAutoBounds, 96);
+        //    if (destinationAuto > 0.9f)
+        //    {
+        //      currentDestinationState = UnloadCargoStateFlag.DestinationFlying;
+        //      lastClick = parent.GetClickPoint(destinationAutoBounds);
+        //      Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y);
+        //      return this;
+        //    }
+        //  }
+        //} 
         else if (currentDestinationState == UnloadCargoStateFlag.DestinationFlying)
         {
           if (parent.InsideState == InsideFlag.Inside)

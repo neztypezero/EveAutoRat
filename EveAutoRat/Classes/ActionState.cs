@@ -17,6 +17,7 @@ namespace EveAutoRat.Classes
       this.delay = delay;
       this.nextDelay = delay;
     }
+
     public EnemyInfo[] GetEnemyList()
     {
       return parent.EnemyList;

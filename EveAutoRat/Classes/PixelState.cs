@@ -23,7 +23,7 @@ namespace EveAutoRat.Classes
   {
     protected static Rectangle eveEchoesIconBounds = new Rectangle(685, 235, 72, 72);
     protected static Rectangle startEveEchoesBounds = new Rectangle(848, 872, 226, 34);
-    protected static Rectangle gameAnnouncementBounds = new Rectangle(1697, 162, 28, 30);
+    protected static Rectangle gameAnnouncementBounds = new Rectangle(1690, 150, 40, 45);
     protected static Rectangle playerNameBounds = new Rectangle(250, 160, 300, 45);
 
     protected static Point encounterOpenDialogPoint = new Point(150, 100);
@@ -44,6 +44,7 @@ namespace EveAutoRat.Classes
     protected static Rectangle eyeBounds = new Rectangle(1440, 635, 480, 45);
     protected static Rectangle filterTitleBounds = new Rectangle(1625, 75, 150, 35);
     protected static Rectangle battleLockOnBounds = new Rectangle(1170, 707, 60, 60);
+    protected static Rectangle battleActionIconBounds = new Rectangle(1204, 150, 78, 975);
     protected static Rectangle battleIconBounds = new Rectangle(1545, 135, 39, 561);
     protected static Rectangle firstBattleIconBounds = new Rectangle(1545, 135, 42, 75);
     protected static Rectangle lootAllBounds = new Rectangle(700, 950, 380, 70);
@@ -77,9 +78,10 @@ namespace EveAutoRat.Classes
     protected static Rectangle nextRewardBounds = new Rectangle(470, 330, 270, 45);
     protected static Rectangle claimAllBounds = new Rectangle(1650, 920, 160, 50);
     protected static Rectangle rewardsCloseBounds = new Rectangle(1850, 100, 30, 30);
+    protected static Rectangle enemyDistanceBounds = new Rectangle(1600, 160, 80, 950);
 
-    protected static Font infoFont = new Font("Arial", 12);
-    protected static Rectangle infoBounds = new Rectangle(10, 300, 500, 800);
+    protected static Font infoFont = new Font("Shentox 13", 20, FontStyle.Regular, GraphicsUnit.Pixel);
+    protected static Rectangle infoBounds = new Rectangle(1, 345, 636, 563);
 
     protected static Rectangle[] weaponBoundsList = new Rectangle[] {
       new Rectangle(1202, 859, 110, 110),
@@ -281,6 +283,16 @@ namespace EveAutoRat.Classes
       }
     }
 
+    public double ParseDouble(string s)
+    {
+      double d = Double.NaN;
+      if (Double.TryParse(s, out d))
+      {
+        return d;
+      }
+      return d;
+    }
+
     public Rectangle FindIcon(Rectangle searchBounds, string iconName, int threshHold)
     {
       Bitmap tbmp = parent.GetThreshHoldBitmap(threshHold);
@@ -316,7 +328,8 @@ namespace EveAutoRat.Classes
     {
       List<float> valueList = new List<float>();
       Dictionary<string, PixelObject> poDict = PixelObjectList.GetPixelObjectDictionary(threshHold);
-      if (poDict.ContainsKey(iconName))
+      Rectangle ib = new Rectangle(0, 0, src.Width, src.Height);
+      if (poDict.ContainsKey(iconName) && ib.Contains(bounds))
       {
         using (Bitmap bmp = src.Clone(bounds, PixelFormat.Format24bppRgb))
         {
@@ -333,7 +346,8 @@ namespace EveAutoRat.Classes
       List<Rectangle> rList = new List<Rectangle>();
       List<float> valueList = new List<float>();
       Dictionary<string, PixelObject> poDict = PixelObjectList.GetPixelObjectDictionary(threshHold);
-      if (poDict.ContainsKey(iconName))
+      Rectangle ib = new Rectangle(0, 0, src.Width, src.Height);
+      if (poDict.ContainsKey(iconName) && ib.Contains(bounds))
       {
         using (Bitmap bmp = src.Clone(bounds, PixelFormat.Format24bppRgb))
         {

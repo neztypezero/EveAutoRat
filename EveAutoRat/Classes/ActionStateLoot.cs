@@ -23,7 +23,6 @@ namespace EveAutoRat.Classes
       using (Bitmap iconColumnLoot = parent.GetThreshHoldBitmap(112).Clone(battleIconBounds, PixelFormat.Format24bppRgb))
       {
         objectCounter.ProcessImage(iconColumnLoot);
-        iconColumnLoot.Save("ObjBitmap\\loot.bmp");
       }
       Rectangle[] lootRectList = objectCounter.GetObjectsRectangles();
       foreach (Rectangle r in lootRectList)

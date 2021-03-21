@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace EveAutoRat.Classes
@@ -71,7 +72,7 @@ namespace EveAutoRat.Classes
           if (playerName.Contains("Addison") && playerName.Contains("Zen"))
           {
             lastClick = parent.GetClickPoint(playerNameBounds);
-            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y+50);
+            Win32.SendMouseClick(eventHWnd, lastClick.X, lastClick.Y + 50);
             running = false;
             return NextState;
           }
